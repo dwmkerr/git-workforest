@@ -6,8 +6,7 @@ A TypeScript CLI for managing git repositories with structured worktrees. Each r
 
 **Repo:** `dwmkerr/git-workforest`
 **npm package:** `workforest`
-**Binary:** `git-workforest` (auto-discovered as `git workforest`)
-**Alias:** `git forest` (set by installer)
+**Binaries:** `git-workforest` and `git-forest` (both auto-discovered by git)
 
 ## Directory Model
 
@@ -15,6 +14,7 @@ A TypeScript CLI for managing git repositories with structured worktrees. Each r
 ~/.workforest.yaml                                # global config
 
 ~/repos/github/dwmkerr/effective-shell/           # repo root (managed by workforest)
+├── .workforest.yaml                              # forest marker (empty file)
 ├── main/                                         # primary branch (initial clone)
 ├── fix-typo/                                     # worktree (default) or fat clone
 └── feature/auth/                                 # nested branch → nested dir
@@ -23,28 +23,30 @@ A TypeScript CLI for managing git repositories with structured worktrees. Each r
 `git forest clone dwmkerr/effective-shell`:
 1. Resolves path via config pattern → `~/repos/github/dwmkerr/effective-shell/`
 2. Clones into `main/` (or whatever the default branch is)
-3. User cds into `main/` and works normally
+3. Creates `.workforest.yaml` marker in the forest root
+4. User cds into `main/` and works normally
 
 `git forest tree fix-typo` (from inside any tree in that repo):
-1. Detects which repo you're in
+1. Detects which repo you're in (walks up to find `.workforest.yaml` marker)
 2. Creates `../fix-typo/` as a git worktree (or full clone if `fatTrees: true`)
 3. Checks out the branch (creates it if it doesn't exist)
 
-`git forest init` (from inside an existing repo):
-1. Restructures the current repo into the forest layout
-2. Moves the clone into a `main/` subfolder
+`git forest init` (interactive):
+1. Detects context:
+   - **Empty directory:** offers to clone a repo
+   - **Inside existing repo:** offers to migrate into forest layout
+2. Creates `.workforest.yaml` marker in the forest root
 
 ## Commands
 
 ```
-git workforest clone <org/repo>       # clone into structured path
-git workforest tree <branch>          # create tree for branch
-git workforest init                   # migrate current repo into forest layout
-git workforest list                   # show trees for current repo
-git workforest info                   # current repo/tree context
+git forest clone <org/repo>       # clone into structured path
+git forest tree <branch>          # create tree for branch
+git forest init                   # interactive: clone or migrate
+git forest list                   # show trees for current repo
 ```
 
-All available via `git forest` alias.
+All available via both `git forest` and `git workforest`.
 
 ## Config (`~/.workforest.yaml`)
 
@@ -63,19 +65,17 @@ fatTrees: false
 
 All fields optional — sensible defaults for everything.
 
+## Forest Marker (`.workforest.yaml`)
+
+An empty `.workforest.yaml` file in the forest root directory identifies it as a workforest-managed repo. Used by `tree` and `list` to locate the forest root from any subdirectory.
+
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dwmkerr/git-workforest/main/install.sh | sh
-```
-
-Which does:
-```bash
 npm install -g workforest
-git config --global alias.forest workforest
 ```
 
-Binary `git-workforest` is placed on PATH by npm, so `git workforest` works via git's auto-discovery. The alias gives `git forest` as shorthand.
+Both `git-workforest` and `git-forest` binaries are placed on PATH by npm, so `git workforest` and `git forest` both work via git's auto-discovery. No alias configuration needed.
 
 ## Project Structure
 
@@ -89,12 +89,10 @@ git-workforest/
 │   │   ├── clone.ts
 │   │   ├── tree.ts
 │   │   ├── init.ts
-│   │   ├── list.ts
-│   │   └── info.ts
+│   │   └── list.ts
 │   ├── config.ts                    # ~/.workforest.yaml loading
 │   ├── git.ts                       # git operations (clone, worktree add, etc.)
 │   └── paths.ts                     # path pattern resolution
-├── install.sh                       # curl | sh installer
 ├── package.json
 ├── tsconfig.json
 └── vitest.config.ts
@@ -122,8 +120,8 @@ Follows the openspec pattern:
   <badges: cicd, npm, codecov>
 </centered header>
 
-## Quickstart           ← curl|sh install + one example
-## Commands             ← clone, tree, init, list, info with examples
+## Quickstart           ← npm install + one example
+## Commands             ← clone, tree, init, list with examples
 ## Configuration        ← ~/.workforest.yaml reference
 ## How It Works         ← directory model explained
 ## Developer Guide      ← contributing, building, testing

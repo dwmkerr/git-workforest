@@ -4,7 +4,7 @@
 
 **Goal:** Build the `workforest` CLI — a TypeScript tool for managing git repos with structured worktrees/clones per branch.
 
-**Architecture:** TypeScript ESM CLI using commander for commands, zod for config validation, and child_process for git operations. Config lives at `~/.workforest.yaml`. Each command is a separate module under `src/commands/`.
+**Architecture:** TypeScript ESM CLI using commander for commands, zod for config validation, and child_process for git operations. Config lives at `~/.workforest.yaml`. Each command is a separate module under `src/commands/`. A `.workforest.yaml` marker file in the forest root identifies managed repos.
 
 **Tech Stack:** TypeScript, commander, chalk, ora, yaml, zod, vitest
 
@@ -19,6 +19,7 @@
 - Create: `bin/git-workforest.js`
 - Create: `src/cli.ts`
 - Create: `src/index.ts`
+- Create: `.gitignore`
 
 **Step 1: Create `package.json`**
 
@@ -29,7 +30,8 @@
   "description": "Managed worktrees with structure. Clone once, branch into folders.",
   "type": "module",
   "bin": {
-    "git-workforest": "./bin/git-workforest.js"
+    "git-workforest": "./bin/git-workforest.js",
+    "git-forest": "./bin/git-workforest.js"
   },
   "exports": {
     ".": {
@@ -78,6 +80,8 @@
   ]
 }
 ```
+
+Note: dual `bin` entries (`git-workforest` and `git-forest`) both point to the same entry point. Git auto-discovers both, so `git workforest` and `git forest` work with no alias config.
 
 **Step 2: Create `tsconfig.json`**
 
@@ -152,20 +156,24 @@ export { loadConfig, type WorkforestConfig } from "./config.js";
 
 (Will be populated as modules are built.)
 
-**Step 7: Install dependencies and verify build**
+**Step 7: Update `.gitignore`**
+
+Add `node_modules/`, `dist/`, `*.tgz` if not already present.
+
+**Step 8: Install dependencies and verify build**
 
 Run: `npm install && npm run build`
 Expected: Clean build, `dist/` created
 
-**Step 8: Verify CLI runs**
+**Step 9: Verify CLI runs**
 
 Run: `node bin/git-workforest.js --version`
 Expected: `0.1.0`
 
-**Step 9: Commit**
+**Step 10: Commit**
 
 ```bash
-git add package.json tsconfig.json vitest.config.ts bin/ src/cli.ts src/index.ts
+git add package.json tsconfig.json vitest.config.ts bin/ src/cli.ts src/index.ts .gitignore
 git commit -m "feat: scaffold workforest CLI project"
 ```
 
@@ -187,8 +195,6 @@ import path from "path";
 import os from "os";
 
 describe("config", () => {
-  const configPath = path.join(os.homedir(), ".workforest.yaml");
-
   describe("DEFAULT_CONFIG", () => {
     it("has sensible defaults", () => {
       expect(DEFAULT_CONFIG.reposDir).toBe("~/repos/[provider]/[org]/[repo]");
@@ -299,7 +305,10 @@ git commit -m "feat: add config module with yaml loading and validation"
 
 ```typescript
 import { describe, it, expect } from "vitest";
-import { resolveRepoPath, resolveTreePath } from "./paths.js";
+import { resolveRepoPath, resolveTreePath, findForestRoot } from "./paths.js";
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
 
 describe("paths", () => {
   describe("resolveRepoPath", () => {
@@ -355,6 +364,26 @@ describe("paths", () => {
       );
     });
   });
+
+  describe("findForestRoot", () => {
+    it("finds forest root by walking up to .workforest.yaml", async () => {
+      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-path-test-"));
+      const forestRoot = path.join(tmpDir, "myrepo");
+      const treeDir = path.join(forestRoot, "main", "src", "deep");
+      await fs.mkdir(treeDir, { recursive: true });
+      await fs.writeFile(path.join(forestRoot, ".workforest.yaml"), "");
+
+      const result = await findForestRoot(treeDir);
+      expect(result).toBe(forestRoot);
+
+      await fs.rm(tmpDir, { recursive: true });
+    });
+
+    it("returns null when no marker found", async () => {
+      const result = await findForestRoot(os.tmpdir());
+      expect(result).toBeNull();
+    });
+  });
 });
 ```
 
@@ -368,6 +397,7 @@ Expected: FAIL — module not found
 ```typescript
 import os from "os";
 import path from "path";
+import { promises as fs } from "fs";
 
 export interface RepoTokens {
   provider: string;
@@ -399,18 +429,36 @@ export function resolveTreePath(
   const treeDir = treePattern.replace("[branch]", branch);
   return path.join(repoRoot, treeDir);
 }
+
+export async function findForestRoot(
+  startDir: string,
+): Promise<string | null> {
+  let dir = path.resolve(startDir);
+  const root = path.parse(dir).root;
+
+  while (dir !== root) {
+    try {
+      await fs.access(path.join(dir, ".workforest.yaml"));
+      return dir;
+    } catch {
+      dir = path.dirname(dir);
+    }
+  }
+
+  return null;
+}
 ```
 
 **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run src/paths.test.ts`
-Expected: All 5 tests PASS
+Expected: All 7 tests PASS
 
 **Step 5: Commit**
 
 ```bash
 git add src/paths.ts src/paths.test.ts
-git commit -m "feat: add path resolution module for repo and tree patterns"
+git commit -m "feat: add path resolution module with forest root detection"
 ```
 
 ---
@@ -437,6 +485,7 @@ import {
   getDefaultBranch,
   isInsideWorktree,
   getRepoRoot,
+  gitFatClone,
 } from "./git.js";
 
 describe("git", () => {
@@ -445,10 +494,8 @@ describe("git", () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-git-test-"));
-    // Create a bare repo to clone from
     bareRepo = path.join(tmpDir, "bare.git");
     execSync(`git init --bare "${bareRepo}"`);
-    // Create an initial commit via a temp clone
     const seedDir = path.join(tmpDir, "seed");
     execSync(`git clone "${bareRepo}" "${seedDir}"`);
     execSync(
@@ -486,6 +533,18 @@ describe("git", () => {
       const treePath = path.join(tmpDir, "tree-fix");
       await gitWorktreeAdd(cloneDir, treePath, "fix-typo");
       const stat = await fs.stat(treePath);
+      expect(stat.isDirectory()).toBe(true);
+    });
+  });
+
+  describe("gitFatClone", () => {
+    it("creates a full clone for a branch", async () => {
+      const cloneDir = path.join(tmpDir, "for-fat");
+      await gitClone(bareRepo, cloneDir);
+      const fatPath = path.join(tmpDir, "fat-clone");
+      await gitFatClone(cloneDir, fatPath, "fix-typo");
+      const gitDir = path.join(fatPath, ".git");
+      const stat = await fs.stat(gitDir);
       expect(stat.isDirectory()).toBe(true);
     });
   });
@@ -530,8 +589,14 @@ export async function getDefaultBranch(repoDir: string): Promise<string> {
     ["symbolic-ref", "refs/remotes/origin/HEAD", "--short"],
     { cwd: repoDir },
   );
-  // "origin/main" → "main"
   return stdout.trim().replace("origin/", "");
+}
+
+export async function getLocalBranch(repoDir: string): Promise<string> {
+  const { stdout } = await exec("git", ["branch", "--show-current"], {
+    cwd: repoDir,
+  });
+  return stdout.trim() || "main";
 }
 
 export async function gitWorktreeAdd(
@@ -542,6 +607,19 @@ export async function gitWorktreeAdd(
   await exec("git", ["worktree", "add", "-b", branch, treePath, "HEAD"], {
     cwd: repoDir,
   });
+}
+
+export async function gitFatClone(
+  sourceDir: string,
+  targetDir: string,
+  branch: string,
+): Promise<void> {
+  const { stdout } = await exec("git", ["remote", "get-url", "origin"], {
+    cwd: sourceDir,
+  });
+  const originUrl = stdout.trim();
+  await exec("git", ["clone", originUrl, targetDir]);
+  await exec("git", ["checkout", "-b", branch], { cwd: targetDir });
 }
 
 export async function isInsideWorktree(dir: string): Promise<boolean> {
@@ -566,13 +644,13 @@ export async function getRepoRoot(dir: string): Promise<string> {
 **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run src/git.test.ts`
-Expected: All 5 tests PASS
+Expected: All 6 tests PASS
 
 **Step 5: Commit**
 
 ```bash
 git add src/git.ts src/git.test.ts
-git commit -m "feat: add git operations module (clone, worktree, branch detection)"
+git commit -m "feat: add git operations module (clone, worktree, fat clone)"
 ```
 
 ---
@@ -614,21 +692,26 @@ describe("clone command", () => {
     await fs.rm(tmpDir, { recursive: true });
   });
 
-  it("clones into the structured path with default branch subfolder", async () => {
+  it("clones into structured path with default branch subfolder", async () => {
     const config = {
       ...DEFAULT_CONFIG,
       reposDir: path.join(tmpDir, "repos/[provider]/[org]/[repo]"),
     };
-    // Use the bare repo path as the "clone URL"
     const result = await cloneCommand(bareRepo, "dwmkerr", "myrepo", config);
-    const mainDir = path.join(
-      tmpDir,
-      "repos/github/dwmkerr/myrepo/main",
-    );
-    // The result should be the path to the default branch tree
     expect(result.treePath).toContain("myrepo");
     const stat = await fs.stat(result.treePath);
     expect(stat.isDirectory()).toBe(true);
+  });
+
+  it("creates .workforest.yaml marker in forest root", async () => {
+    const config = {
+      ...DEFAULT_CONFIG,
+      reposDir: path.join(tmpDir, "repos/[provider]/[org]/[repo]"),
+    };
+    const result = await cloneCommand(bareRepo, "dwmkerr", "myrepo", config);
+    const marker = path.join(result.repoRoot, ".workforest.yaml");
+    const stat = await fs.stat(marker);
+    expect(stat.isFile()).toBe(true);
   });
 });
 ```
@@ -665,7 +748,6 @@ export async function cloneCommand(
     repo,
   });
 
-  // Clone to a temporary location to detect default branch
   const tmpClone = `${repoRoot}/.wf-clone-tmp`;
   await fs.mkdir(repoRoot, { recursive: true });
   await gitClone(repoUrl, tmpClone);
@@ -673,8 +755,10 @@ export async function cloneCommand(
   const defaultBranch = await getDefaultBranch(tmpClone);
   const treePath = path.join(repoRoot, defaultBranch);
 
-  // Move temp clone to the branch directory
   await fs.rename(tmpClone, treePath);
+
+  // Create forest marker
+  await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), "");
 
   return { repoRoot, treePath, branch: defaultBranch };
 }
@@ -683,19 +767,17 @@ export async function cloneCommand(
 **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run src/commands/clone.test.ts`
-Expected: PASS
+Expected: Both tests PASS
 
 **Step 5: Wire into CLI**
 
 Add the clone command to `src/cli.ts`:
 
 ```typescript
-// Add import at top
 import { cloneCommand } from "./commands/clone.js";
 import { loadConfig } from "./config.js";
 import ora from "ora";
 
-// Add command before program.parse()
 program
   .command("clone <repo>")
   .description("Clone a GitHub repo into the structured forest path")
@@ -740,7 +822,6 @@ git commit -m "feat: add clone command"
 - Create: `src/commands/tree.ts`
 - Create: `src/commands/tree.test.ts`
 - Modify: `src/cli.ts` — register tree command
-- Modify: `src/git.ts` — add worktree for existing branch support
 
 **Step 1: Write the failing test**
 
@@ -760,7 +841,6 @@ describe("tree command", () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-tree-test-"));
-    // Simulate a forest: repo root with main/ clone
     repoRoot = path.join(tmpDir, "myrepo");
     mainDir = path.join(repoRoot, "main");
     const bareRepo = path.join(tmpDir, "bare.git");
@@ -772,6 +852,8 @@ describe("tree command", () => {
     );
     await fs.mkdir(repoRoot, { recursive: true });
     execSync(`git clone "${bareRepo}" "${mainDir}"`);
+    // Create forest marker
+    await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), "");
   });
 
   afterEach(async () => {
@@ -790,7 +872,6 @@ describe("tree command", () => {
     const config = { ...DEFAULT_CONFIG, fatTrees: true };
     const result = await treeCommand("fix-typo", mainDir, config);
     expect(result.treePath).toBe(path.join(repoRoot, "fix-typo"));
-    // Fat clone should have its own .git directory
     const gitDir = path.join(result.treePath, ".git");
     const stat = await fs.stat(gitDir);
     expect(stat.isDirectory()).toBe(true);
@@ -803,50 +884,13 @@ describe("tree command", () => {
 Run: `npx vitest run src/commands/tree.test.ts`
 Expected: FAIL — module not found
 
-**Step 3: Add `gitFatClone` to `src/git.ts`**
-
-Append to `src/git.ts`:
-
-```typescript
-export async function gitFatClone(
-  sourceDir: string,
-  targetDir: string,
-  branch: string,
-): Promise<void> {
-  const { stdout } = await exec("git", ["remote", "get-url", "origin"], {
-    cwd: sourceDir,
-  });
-  const originUrl = stdout.trim();
-  await exec("git", ["clone", "-b", branch, originUrl, targetDir]);
-}
-
-export async function branchExistsOnRemote(
-  repoDir: string,
-  branch: string,
-): Promise<boolean> {
-  try {
-    await exec("git", ["ls-remote", "--exit-code", "--heads", "origin", branch], {
-      cwd: repoDir,
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-```
-
-**Step 4: Write `src/commands/tree.ts`**
+**Step 3: Write `src/commands/tree.ts`**
 
 ```typescript
 import path from "path";
-import {
-  gitWorktreeAdd,
-  gitFatClone,
-  getRepoRoot,
-  branchExistsOnRemote,
-} from "../git.js";
+import { gitWorktreeAdd, gitFatClone, getRepoRoot } from "../git.js";
 import type { WorkforestConfig } from "../config.js";
-import { resolveTreePath } from "../paths.js";
+import { resolveTreePath, findForestRoot } from "../paths.js";
 
 export interface TreeResult {
   treePath: string;
@@ -858,19 +902,18 @@ export async function treeCommand(
   cwd: string,
   config: WorkforestConfig,
 ): Promise<TreeResult> {
+  const forestRoot = await findForestRoot(cwd);
+  if (!forestRoot) {
+    throw new Error(
+      "Not inside a workforest. Run 'git forest clone' or 'git forest init' first.",
+    );
+  }
+
   const gitRoot = await getRepoRoot(cwd);
-  // The repo root is the parent of the git working tree
-  const repoRoot = path.dirname(gitRoot);
-  const treePath = resolveTreePath(repoRoot, config.treeDir, branch);
+  const treePath = resolveTreePath(forestRoot, config.treeDir, branch);
 
   if (config.fatTrees) {
-    const remoteExists = await branchExistsOnRemote(gitRoot, branch);
-    if (remoteExists) {
-      await gitFatClone(gitRoot, treePath, branch);
-    } else {
-      await gitFatClone(gitRoot, treePath, "HEAD");
-      // TODO: create and checkout new branch
-    }
+    await gitFatClone(gitRoot, treePath, branch);
   } else {
     await gitWorktreeAdd(gitRoot, treePath, branch);
   }
@@ -879,12 +922,12 @@ export async function treeCommand(
 }
 ```
 
-**Step 5: Run tests to verify they pass**
+**Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run src/commands/tree.test.ts`
 Expected: Both tests PASS
 
-**Step 6: Wire into CLI**
+**Step 5: Wire into CLI**
 
 Add to `src/cli.ts` before `program.parse()`:
 
@@ -909,21 +952,204 @@ program
   });
 ```
 
-**Step 7: Build and verify**
+**Step 6: Build and verify**
 
 Run: `npm run build && node bin/git-workforest.js tree --help`
 Expected: Shows help for tree command
 
-**Step 8: Commit**
+**Step 7: Commit**
 
 ```bash
-git add src/commands/tree.ts src/commands/tree.test.ts src/git.ts src/cli.ts
+git add src/commands/tree.ts src/commands/tree.test.ts src/cli.ts
 git commit -m "feat: add tree command (worktree and fat clone modes)"
 ```
 
 ---
 
-### Task 7: List Command
+### Task 7: Init Command (Interactive)
+
+**Files:**
+- Create: `src/commands/init.ts`
+- Create: `src/commands/init.test.ts`
+- Modify: `src/cli.ts` — register init command
+
+`init` is interactive. It detects context and offers the appropriate action:
+- **Empty directory or no git repo:** prompts for a repo to clone
+- **Inside existing git repo:** offers to migrate into forest layout
+
+**Step 1: Write the failing test**
+
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
+import { execSync } from "child_process";
+import { migrateToForest } from "./init.js";
+
+describe("init command", () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-init-test-"));
+  });
+
+  afterEach(async () => {
+    await fs.rm(tmpDir, { recursive: true });
+  });
+
+  it("migrates an existing repo into forest layout", async () => {
+    const repoDir = path.join(tmpDir, "myrepo");
+    execSync(`git init "${repoDir}"`);
+    execSync(
+      `cd "${repoDir}" && git config user.email "test@test.com" && git config user.name "Test" && touch README.md && git add . && git commit -m "init"`,
+    );
+
+    const result = await migrateToForest(repoDir);
+    expect(result.treePath).toBe(path.join(repoDir, "main"));
+    const gitDir = path.join(result.treePath, ".git");
+    const stat = await fs.stat(gitDir);
+    expect(stat.isDirectory()).toBe(true);
+  });
+
+  it("creates .workforest.yaml marker after migration", async () => {
+    const repoDir = path.join(tmpDir, "myrepo");
+    execSync(`git init "${repoDir}"`);
+    execSync(
+      `cd "${repoDir}" && git config user.email "test@test.com" && git config user.name "Test" && touch README.md && git add . && git commit -m "init"`,
+    );
+
+    const result = await migrateToForest(repoDir);
+    const marker = path.join(result.repoRoot, ".workforest.yaml");
+    const stat = await fs.stat(marker);
+    expect(stat.isFile()).toBe(true);
+  });
+});
+```
+
+**Step 2: Run test to verify it fails**
+
+Run: `npx vitest run src/commands/init.test.ts`
+Expected: FAIL — module not found
+
+**Step 3: Write `src/commands/init.ts`**
+
+```typescript
+import path from "path";
+import { promises as fs } from "fs";
+import { getRepoRoot, getLocalBranch, isInsideWorktree } from "../git.js";
+
+export interface InitResult {
+  repoRoot: string;
+  treePath: string;
+  branch: string;
+}
+
+export async function detectContext(cwd: string): Promise<"empty" | "repo"> {
+  if (await isInsideWorktree(cwd)) return "repo";
+  return "empty";
+}
+
+export async function migrateToForest(cwd: string): Promise<InitResult> {
+  const gitRoot = await getRepoRoot(cwd);
+  const branch = await getLocalBranch(gitRoot);
+  const repoRoot = gitRoot;
+  const tmpName = `.wf-migrate-tmp-${Date.now()}`;
+  const tmpPath = path.join(path.dirname(repoRoot), tmpName);
+  const treePath = path.join(repoRoot, branch);
+
+  await fs.rename(repoRoot, tmpPath);
+  await fs.mkdir(repoRoot, { recursive: true });
+  await fs.rename(tmpPath, treePath);
+
+  // Create forest marker
+  await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), "");
+
+  return { repoRoot, treePath, branch };
+}
+```
+
+**Step 4: Run tests to verify they pass**
+
+Run: `npx vitest run src/commands/init.test.ts`
+Expected: Both tests PASS
+
+**Step 5: Wire into CLI**
+
+The interactive part prompts the user based on `detectContext()`:
+
+```typescript
+import { detectContext, migrateToForest } from "./commands/init.js";
+import { cloneCommand } from "./commands/clone.js";
+import readline from "readline/promises";
+
+program
+  .command("init")
+  .description("Interactive setup: clone a new repo or migrate an existing one")
+  .action(async () => {
+    const spinner = ora();
+    try {
+      const config = await loadConfig();
+      const context = await detectContext(process.cwd());
+
+      if (context === "repo") {
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout,
+        });
+        const answer = await rl.question(
+          "Existing repo detected. Migrate to forest layout? (y/N) ",
+        );
+        rl.close();
+        if (answer.toLowerCase() !== "y") {
+          console.log("Aborted.");
+          return;
+        }
+        spinner.start("Migrating to forest layout...");
+        const result = await migrateToForest(process.cwd());
+        spinner.succeed(`Migrated. Main tree at ${result.treePath}`);
+      } else {
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout,
+        });
+        const repo = await rl.question(
+          "No repo found. Enter org/repo to clone (e.g. dwmkerr/effective-shell): ",
+        );
+        rl.close();
+        if (!repo || !repo.includes("/")) {
+          console.log("Aborted.");
+          return;
+        }
+        const [org, repoName] = repo.split("/");
+        const repoUrl = `git@github.com:${org}/${repoName}`;
+        spinner.start(`Cloning ${org}/${repoName}...`);
+        const result = await cloneCommand(repoUrl, org, repoName, config);
+        spinner.succeed(`Cloned to ${result.treePath}`);
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      spinner.fail(message);
+      process.exit(1);
+    }
+  });
+```
+
+**Step 6: Build and verify**
+
+Run: `npm run build && node bin/git-workforest.js init --help`
+Expected: Shows help for init command
+
+**Step 7: Commit**
+
+```bash
+git add src/commands/init.ts src/commands/init.test.ts src/cli.ts
+git commit -m "feat: add interactive init command (clone or migrate)"
+```
+
+---
+
+### Task 8: List Command
 
 **Files:**
 - Create: `src/commands/list.ts`
@@ -956,17 +1182,18 @@ describe("list command", () => {
     );
     await fs.mkdir(repoRoot, { recursive: true });
     execSync(`git clone "${bareRepo}" "${path.join(repoRoot, "main")}"`);
-    // Add a worktree
     execSync(
       `cd "${path.join(repoRoot, "main")}" && git worktree add -b fix-typo "${path.join(repoRoot, "fix-typo")}" HEAD`,
     );
+    // Create forest marker
+    await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), "");
   });
 
   afterEach(async () => {
     await fs.rm(tmpDir, { recursive: true });
   });
 
-  it("lists all trees in the repo root", async () => {
+  it("lists all trees in the forest", async () => {
     const trees = await listTrees(path.join(repoRoot, "main"));
     expect(trees).toContainEqual(
       expect.objectContaining({ name: "main" }),
@@ -988,7 +1215,7 @@ Expected: FAIL — module not found
 ```typescript
 import { promises as fs } from "fs";
 import path from "path";
-import { getRepoRoot } from "../git.js";
+import { findForestRoot } from "../paths.js";
 import { execFile } from "child_process";
 import { promisify } from "util";
 
@@ -1001,15 +1228,17 @@ export interface TreeEntry {
 }
 
 export async function listTrees(cwd: string): Promise<TreeEntry[]> {
-  const gitRoot = await getRepoRoot(cwd);
-  const repoRoot = path.dirname(gitRoot);
+  const forestRoot = await findForestRoot(cwd);
+  if (!forestRoot) {
+    throw new Error("Not inside a workforest.");
+  }
 
-  const entries = await fs.readdir(repoRoot, { withFileTypes: true });
+  const entries = await fs.readdir(forestRoot, { withFileTypes: true });
   const trees: TreeEntry[] = [];
 
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
-    const entryPath = path.join(repoRoot, entry.name);
+    const entryPath = path.join(forestRoot, entry.name);
     try {
       const { stdout } = await exec(
         "git",
@@ -1045,7 +1274,7 @@ import chalk from "chalk";
 
 program
   .command("list")
-  .description("Show trees for the current repo")
+  .description("Show trees for the current forest")
   .action(async () => {
     try {
       const trees = await listTrees(process.cwd());
@@ -1054,7 +1283,9 @@ program
         return;
       }
       for (const tree of trees) {
-        console.log(`  ${chalk.green(tree.name)}  ${chalk.dim(tree.branch)}  ${chalk.dim(tree.path)}`);
+        console.log(
+          `  ${chalk.green(tree.name)}  ${chalk.dim(tree.branch)}  ${chalk.dim(tree.path)}`,
+        );
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -1068,475 +1299,26 @@ program
 
 ```bash
 git add src/commands/list.ts src/commands/list.test.ts src/cli.ts
-git commit -m "feat: add list command to show trees for current repo"
+git commit -m "feat: add list command to show trees in current forest"
 ```
 
 ---
 
-### Task 8: Info Command
-
-**Files:**
-- Create: `src/commands/info.ts`
-- Create: `src/commands/info.test.ts`
-- Modify: `src/cli.ts` — register info command
-
-**Step 1: Write the failing test**
-
-```typescript
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { promises as fs } from "fs";
-import path from "path";
-import os from "os";
-import { execSync } from "child_process";
-import { getForestInfo } from "./info.js";
-
-describe("info command", () => {
-  let tmpDir: string;
-
-  beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-info-test-"));
-    const bareRepo = path.join(tmpDir, "bare.git");
-    execSync(`git init --bare "${bareRepo}"`);
-    const seedDir = path.join(tmpDir, "seed");
-    execSync(`git clone "${bareRepo}" "${seedDir}"`);
-    execSync(
-      `cd "${seedDir}" && git config user.email "test@test.com" && git config user.name "Test" && touch README.md && git add . && git commit -m "init" && git push`,
-    );
-    const repoRoot = path.join(tmpDir, "myrepo");
-    await fs.mkdir(repoRoot, { recursive: true });
-    execSync(`git clone "${bareRepo}" "${path.join(repoRoot, "main")}"`);
-  });
-
-  afterEach(async () => {
-    await fs.rm(tmpDir, { recursive: true });
-  });
-
-  it("returns repo and tree info", async () => {
-    const mainDir = path.join(tmpDir, "myrepo", "main");
-    const info = await getForestInfo(mainDir);
-    expect(info.repo).toBe("myrepo");
-    expect(info.tree).toBe("main");
-    expect(info.branch).toMatch(/^(main|master)$/);
-  });
-
-  it("returns null when not in a forest", async () => {
-    const info = await getForestInfo(tmpDir);
-    expect(info).toBeNull();
-  });
-});
-```
-
-**Step 2: Run test to verify it fails**
-
-Run: `npx vitest run src/commands/info.test.ts`
-Expected: FAIL — module not found
-
-**Step 3: Write `src/commands/info.ts`**
-
-```typescript
-import path from "path";
-import { getRepoRoot, isInsideWorktree } from "../git.js";
-import { execFile } from "child_process";
-import { promisify } from "util";
-
-const exec = promisify(execFile);
-
-export interface ForestInfo {
-  repo: string;
-  tree: string;
-  branch: string;
-  repoRoot: string;
-  treePath: string;
-}
-
-export async function getForestInfo(
-  cwd: string,
-): Promise<ForestInfo | null> {
-  if (!(await isInsideWorktree(cwd))) return null;
-
-  try {
-    const gitRoot = await getRepoRoot(cwd);
-    const repoRoot = path.dirname(gitRoot);
-    const repo = path.basename(repoRoot);
-    const tree = path.basename(gitRoot);
-
-    const { stdout } = await exec("git", ["branch", "--show-current"], {
-      cwd: gitRoot,
-    });
-
-    return {
-      repo,
-      tree,
-      branch: stdout.trim(),
-      repoRoot,
-      treePath: gitRoot,
-    };
-  } catch {
-    return null;
-  }
-}
-```
-
-**Step 4: Run tests to verify they pass**
-
-Run: `npx vitest run src/commands/info.test.ts`
-Expected: Both tests PASS
-
-**Step 5: Wire into CLI**
-
-Add to `src/cli.ts`:
-
-```typescript
-import { getForestInfo } from "./commands/info.js";
-
-program
-  .command("info")
-  .description("Show current repo and tree context")
-  .option("--json", "Output as JSON")
-  .action(async (options: { json?: boolean }) => {
-    try {
-      const info = await getForestInfo(process.cwd());
-      if (!info) {
-        console.error("Not inside a workforest tree.");
-        process.exit(1);
-      }
-      if (options.json) {
-        console.log(JSON.stringify(info));
-      } else {
-        console.log(`${info.repo}:${info.tree}`);
-      }
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error(message);
-      process.exit(1);
-    }
-  });
-```
-
-**Step 6: Commit**
-
-```bash
-git add src/commands/info.ts src/commands/info.test.ts src/cli.ts
-git commit -m "feat: add info command for repo/tree context"
-```
-
----
-
-### Task 9: Init Command (Migrate Existing Repo)
-
-**Files:**
-- Create: `src/commands/init.ts`
-- Create: `src/commands/init.test.ts`
-- Modify: `src/cli.ts` — register init command
-
-**Step 1: Write the failing test**
-
-```typescript
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { promises as fs } from "fs";
-import path from "path";
-import os from "os";
-import { execSync } from "child_process";
-import { initCommand } from "./init.js";
-
-describe("init command", () => {
-  let tmpDir: string;
-
-  beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-init-test-"));
-  });
-
-  afterEach(async () => {
-    await fs.rm(tmpDir, { recursive: true });
-  });
-
-  it("migrates an existing repo into forest layout", async () => {
-    // Create a normal git repo at tmpDir/myrepo
-    const repoDir = path.join(tmpDir, "myrepo");
-    execSync(`git init "${repoDir}"`);
-    execSync(
-      `cd "${repoDir}" && git config user.email "test@test.com" && git config user.name "Test" && touch README.md && git add . && git commit -m "init"`,
-    );
-
-    const result = await initCommand(repoDir);
-    // After init, the repo should be at myrepo/main/
-    expect(result.treePath).toBe(path.join(repoDir, "main"));
-    const gitDir = path.join(result.treePath, ".git");
-    const stat = await fs.stat(gitDir);
-    expect(stat.isDirectory()).toBe(true);
-    // Original root should still exist as the parent
-    const rootStat = await fs.stat(repoDir);
-    expect(rootStat.isDirectory()).toBe(true);
-  });
-});
-```
-
-**Step 2: Run test to verify it fails**
-
-Run: `npx vitest run src/commands/init.test.ts`
-Expected: FAIL — module not found
-
-**Step 3: Write `src/commands/init.ts`**
-
-```typescript
-import path from "path";
-import { promises as fs } from "fs";
-import { getDefaultBranch, getRepoRoot } from "../git.js";
-
-export interface InitResult {
-  repoRoot: string;
-  treePath: string;
-  branch: string;
-}
-
-export async function initCommand(cwd: string): Promise<InitResult> {
-  const gitRoot = await getRepoRoot(cwd);
-
-  let branch: string;
-  try {
-    branch = await getDefaultBranch(gitRoot);
-  } catch {
-    // No remote, detect from local HEAD
-    const { execFile } = await import("child_process");
-    const { promisify } = await import("util");
-    const exec = promisify(execFile);
-    const { stdout } = await exec("git", ["branch", "--show-current"], {
-      cwd: gitRoot,
-    });
-    branch = stdout.trim() || "main";
-  }
-
-  const repoRoot = gitRoot;
-  const tmpName = `.wf-migrate-tmp-${Date.now()}`;
-  const tmpPath = path.join(path.dirname(repoRoot), tmpName);
-  const treePath = path.join(repoRoot, branch);
-
-  // Move repo contents to temp location
-  await fs.rename(repoRoot, tmpPath);
-  // Recreate the repo root directory
-  await fs.mkdir(repoRoot, { recursive: true });
-  // Move the clone into the branch subfolder
-  await fs.rename(tmpPath, treePath);
-
-  return { repoRoot, treePath, branch };
-}
-```
-
-**Step 4: Run tests to verify they pass**
-
-Run: `npx vitest run src/commands/init.test.ts`
-Expected: PASS
-
-**Step 5: Wire into CLI**
-
-Add to `src/cli.ts`:
-
-```typescript
-import { initCommand } from "./commands/init.js";
-
-program
-  .command("init")
-  .description("Migrate the current repo into a forest layout")
-  .action(async () => {
-    const spinner = ora();
-    try {
-      spinner.start("Migrating repo to forest layout...");
-      const result = await initCommand(process.cwd());
-      spinner.succeed(
-        `Migrated to forest layout. Main tree at ${result.treePath}`,
-      );
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      spinner.fail(message);
-      process.exit(1);
-    }
-  });
-```
-
-**Step 6: Commit**
-
-```bash
-git add src/commands/init.ts src/commands/init.test.ts src/cli.ts
-git commit -m "feat: add init command to migrate existing repos"
-```
-
----
-
-### Task 10: Install Script
-
-**Files:**
-- Create: `install.sh`
-
-**Step 1: Write `install.sh`**
-
-```bash
-#!/bin/sh
-set -e
-
-echo "Installing workforest..."
-
-# Check for npm
-if ! command -v npm >/dev/null 2>&1; then
-  echo "Error: npm is required. Install Node.js first: https://nodejs.org"
-  exit 1
-fi
-
-# Install the package globally
-npm install -g workforest
-
-# Set up the git alias
-git config --global alias.forest workforest
-
-echo ""
-echo "workforest installed successfully!"
-echo ""
-echo "  git workforest clone <org/repo>   Full command"
-echo "  git forest clone <org/repo>       Short alias"
-echo ""
-```
-
-**Step 2: Verify it's valid shell**
-
-Run: `bash -n install.sh`
-Expected: No errors
-
-**Step 3: Commit**
-
-```bash
-git add install.sh
-git commit -m "feat: add curl|sh installer script"
-```
-
----
-
-### Task 11: README
+### Task 9: README
 
 **Files:**
 - Create: `README.md`
 
 **Step 1: Write `README.md`**
 
-Following the established dwmkerr pattern (centered header, hero section, quickstart first):
-
-```markdown
-<p align="center">
-  <h2 align="center"><code>🌲 git-workforest</code></h2>
-  <h3 align="center">Managed worktrees with structure. Clone once, branch into folders.</h3>
-  <p align="center">
-    <a href="#quickstart">Quickstart</a> |
-    <a href="#commands">Commands</a> |
-    <a href="#configuration">Configuration</a> |
-    <a href="#how-it-works">How It Works</a> |
-    <a href="#developer-guide">Developer Guide</a>
-  </p>
-</p>
-
-## Quickstart
-
-Install:
-
-\```bash
-curl -fsSL https://raw.githubusercontent.com/dwmkerr/git-workforest/main/install.sh | sh
-\```
-
-Or manually:
-
-\```bash
-npm install -g workforest
-git config --global alias.forest workforest
-\```
-
-Clone a repo:
-
-\```bash
-git forest clone dwmkerr/effective-shell
-cd ~/repos/github/dwmkerr/effective-shell/main
-\```
-
-Create a tree for a branch:
-
-\```bash
-git forest tree fix-typo
-cd ../fix-typo
-\```
-
-## Commands
-
-### `git forest clone <org/repo>`
-
-Clones a GitHub repo into a structured path with the default branch as a subfolder.
-
-### `git forest tree <branch>`
-
-Creates a new tree (worktree or full clone) for a branch. Run from inside any existing tree.
-
-### `git forest init`
-
-Migrates an existing repo into the forest layout. Run from inside the repo.
-
-### `git forest list`
-
-Shows all trees for the current repo.
-
-### `git forest info`
-
-Shows the current repo and tree context. Useful for shell prompts.
-
-\```bash
-git forest info          # myrepo:fix-typo
-git forest info --json   # {"repo":"myrepo","tree":"fix-typo",...}
-\```
-
-## Configuration
-
-Config file: `~/.workforest.yaml`
-
-\```yaml
-# Path pattern for repo directories
-# Tokens: [provider], [org], [repo]
-reposDir: ~/repos/[provider]/[org]/[repo]
-
-# Subdirectory pattern for trees
-# Tokens: [branch]
-treeDir: "[branch]"
-
-# Use full clones instead of git worktrees
-fatTrees: false
-\```
-
-All fields are optional with sensible defaults.
-
-## How It Works
-
-\```
-~/repos/github/dwmkerr/effective-shell/    # repo root
-├── main/                                   # default branch (full clone)
-├── fix-typo/                               # worktree (or fat clone)
-└── feature/auth/                           # another branch
-\```
-
-Each repo gets a directory. Each branch gets a subdirectory — either a git worktree (default, lightweight) or a full clone (`fatTrees: true`).
-
-`git workforest` is auto-discovered by git because the binary is named `git-workforest`. The `git forest` shorthand is a git alias set by the installer.
-
-## Developer Guide
-
-\```bash
-git clone https://github.com/dwmkerr/git-workforest
-cd git-workforest
-npm install
-npm run build
-npm test
-\```
-
-Run locally:
-
-\```bash
-node bin/git-workforest.js clone dwmkerr/effective-shell
-\```
-```
-
-Note: Remove the backslash before each triple-backtick when writing the actual file (the backslashes above are escaping for this plan document).
+Follow the established dwmkerr pattern (centered header, quickstart first). Use the structure from the design doc. Include:
+- Centered header with tree emoji, project name, tagline
+- Nav links (Quickstart | Commands | Configuration | How It Works | Developer Guide)
+- Quickstart: `npm install -g workforest` + one clone example
+- Commands: clone, tree, init, list with brief examples
+- Configuration: `~/.workforest.yaml` reference
+- How It Works: directory model diagram
+- Developer Guide: clone, install, build, test
 
 **Step 2: Commit**
 
@@ -1547,7 +1329,7 @@ git commit -m "docs: add README with quickstart, commands, and config reference"
 
 ---
 
-### Task 12: Final Integration Test
+### Task 10: Final Integration Test
 
 **Step 1: Run all tests**
 
@@ -1557,7 +1339,7 @@ Expected: All tests pass
 **Step 2: Build and verify full CLI**
 
 Run: `npm run build && node bin/git-workforest.js --help`
-Expected: Shows all 5 commands (clone, tree, init, list, info)
+Expected: Shows all 4 commands (clone, tree, init, list)
 
 **Step 3: Verify types**
 
@@ -1569,26 +1351,4 @@ Expected: No type errors
 ```bash
 git add -A
 git commit -m "fix: address integration test findings"
-```
-
----
-
-### Task 13: Initialize Git Repo and Push
-
-**Step 1: Initialize git**
-
-```bash
-cd /Users/Dave_Kerr/repos/github/dwmkerr/workforest
-git init
-echo "node_modules/\ndist/\n*.tgz" > .gitignore
-```
-
-**Step 2: Create initial commit with all work**
-
-All previous task commits happen during implementation. This step is just to ensure the repo is initialized before Task 1 begins.
-
-**Step 3: Create GitHub repo**
-
-```bash
-gh repo create dwmkerr/git-workforest --public --source=. --push
 ```
