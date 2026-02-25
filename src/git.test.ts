@@ -1,0 +1,87 @@
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
+import { execSync } from "child_process";
+import {
+  gitClone,
+  gitWorktreeAdd,
+  getDefaultBranch,
+  isInsideWorktree,
+  getRepoRoot,
+  gitFatClone,
+} from "./git.js";
+
+describe("git", () => {
+  let tmpDir: string;
+  let bareRepo: string;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-git-test-"));
+    bareRepo = path.join(tmpDir, "bare.git");
+    execSync(`git init --bare "${bareRepo}"`);
+    const seedDir = path.join(tmpDir, "seed");
+    execSync(`git clone "${bareRepo}" "${seedDir}"`);
+    execSync(
+      `cd "${seedDir}" && git config user.email "test@test.com" && git config user.name "Test" && touch README.md && git add . && git commit -m "init" && git push`,
+    );
+  });
+
+  afterEach(async () => {
+    await fs.rm(tmpDir, { recursive: true });
+  });
+
+  describe("gitClone", () => {
+    it("clones a repo to target directory", async () => {
+      const target = path.join(tmpDir, "cloned");
+      await gitClone(bareRepo, target);
+      const gitDir = path.join(target, ".git");
+      const stat = await fs.stat(gitDir);
+      expect(stat.isDirectory()).toBe(true);
+    });
+  });
+
+  describe("getDefaultBranch", () => {
+    it("detects the default branch", async () => {
+      const cloneDir = path.join(tmpDir, "for-branch");
+      await gitClone(bareRepo, cloneDir);
+      const branch = await getDefaultBranch(cloneDir);
+      expect(["main", "master"]).toContain(branch);
+    });
+  });
+
+  describe("gitWorktreeAdd", () => {
+    it("creates a worktree for a new branch", async () => {
+      const cloneDir = path.join(tmpDir, "for-worktree");
+      await gitClone(bareRepo, cloneDir);
+      const treePath = path.join(tmpDir, "tree-fix");
+      await gitWorktreeAdd(cloneDir, treePath, "fix-typo");
+      const stat = await fs.stat(treePath);
+      expect(stat.isDirectory()).toBe(true);
+    });
+  });
+
+  describe("gitFatClone", () => {
+    it("creates a full clone for a branch", async () => {
+      const cloneDir = path.join(tmpDir, "for-fat");
+      await gitClone(bareRepo, cloneDir);
+      const fatPath = path.join(tmpDir, "fat-clone");
+      await gitFatClone(cloneDir, fatPath, "fix-typo");
+      const gitDir = path.join(fatPath, ".git");
+      const stat = await fs.stat(gitDir);
+      expect(stat.isDirectory()).toBe(true);
+    });
+  });
+
+  describe("isInsideWorktree", () => {
+    it("returns true inside a git repo", async () => {
+      const cloneDir = path.join(tmpDir, "for-check");
+      await gitClone(bareRepo, cloneDir);
+      expect(await isInsideWorktree(cloneDir)).toBe(true);
+    });
+
+    it("returns false outside a git repo", async () => {
+      expect(await isInsideWorktree(tmpDir)).toBe(false);
+    });
+  });
+});
