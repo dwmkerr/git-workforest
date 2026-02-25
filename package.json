@@ -23,6 +23,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
+    "start": "node bin/git-workforest.js",
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
