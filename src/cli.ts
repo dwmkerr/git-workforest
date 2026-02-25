@@ -6,6 +6,8 @@ import { cloneCommand } from "./commands/clone.js";
 import { treeCommand } from "./commands/tree.js";
 import { detectContext, migrateToForest } from "./commands/init.js";
 import readline from "readline/promises";
+import chalk from "chalk";
+import { listTrees } from "./commands/list.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
@@ -108,6 +110,28 @@ program
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       spinner.fail(message);
+      process.exit(1);
+    }
+  });
+
+program
+  .command("list")
+  .description("Show trees for the current forest")
+  .action(async () => {
+    try {
+      const trees = await listTrees(process.cwd());
+      if (trees.length === 0) {
+        console.log("No trees found.");
+        return;
+      }
+      for (const tree of trees) {
+        console.log(
+          `  ${chalk.green(tree.name)}  ${chalk.dim(tree.branch)}  ${chalk.dim(tree.path)}`,
+        );
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(message);
       process.exit(1);
     }
   });
