@@ -11,19 +11,22 @@ describe("tree command", () => {
   let repoRoot: string;
   let mainDir: string;
 
+  const quiet = { stdio: "pipe" as const };
+
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-tree-test-"));
     repoRoot = path.join(tmpDir, "myrepo");
     mainDir = path.join(repoRoot, "main");
     const bareRepo = path.join(tmpDir, "bare.git");
-    execSync(`git init --bare "${bareRepo}"`);
+    execSync(`git init --bare "${bareRepo}"`, quiet);
     const seedDir = path.join(tmpDir, "seed");
-    execSync(`git clone "${bareRepo}" "${seedDir}"`);
+    execSync(`git clone "${bareRepo}" "${seedDir}"`, quiet);
     execSync(
       `cd "${seedDir}" && git config user.email "test@test.com" && git config user.name "Test" && touch README.md && git add . && git commit -m "init" && git push`,
+      quiet,
     );
     await fs.mkdir(repoRoot, { recursive: true });
-    execSync(`git clone "${bareRepo}" "${mainDir}"`);
+    execSync(`git clone "${bareRepo}" "${mainDir}"`, quiet);
     await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), "");
   });
 
