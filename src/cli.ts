@@ -35,23 +35,17 @@ program
     "Managed worktrees with structure. Clone once, branch into folders.",
   )
   .version(version)
-  .action(() => {
-    console.log("usage:");
-    console.log("");
-    console.log("  clone a repo into a structured forest:");
-    console.log("    git forest clone dwmkerr/effective-shell");
-    console.log("");
-    console.log("  migrate an existing repo to forest layout:");
-    console.log("    cd ~/repos/myproject && git forest migrate");
-    console.log("");
-    console.log("  create a worktree for a branch:");
-    console.log("    git forest tree fix-typo");
-    console.log("");
-    console.log("  show forest status:");
-    console.log("    git forest status");
-    console.log("");
-    console.log(`run ${chalk.dim("git forest --help")} for all options.`);
-  });
+  .addHelpText(
+    "after",
+    `
+examples:
+
+  # clone a repo into a structured forest
+  git forest clone dwmkerr/effective-shell
+
+  # migrate an existing repo to forest layout
+  cd ~/repos/myproject && git forest migrate`,
+  );
 
 program
   .command("clone <repo>")
