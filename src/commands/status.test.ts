@@ -3,15 +3,15 @@ import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
 import { execSync } from "child_process";
-import { listTrees } from "./list.js";
+import { statusTrees } from "./status.js";
 
-describe("list command", () => {
+describe("status command", () => {
   const quiet = { stdio: "pipe" as const };
   let tmpDir: string;
   let repoRoot: string;
 
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-list-test-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-status-test-"));
     repoRoot = path.join(tmpDir, "myrepo");
     const bareRepo = path.join(tmpDir, "bare.git");
     execSync(`git init --bare "${bareRepo}"`, quiet);
@@ -35,12 +35,26 @@ describe("list command", () => {
   });
 
   it("lists all trees in the forest", async () => {
-    const trees = await listTrees(path.join(repoRoot, "main"));
+    const trees = await statusTrees(path.join(repoRoot, "main"));
     expect(trees).toContainEqual(
       expect.objectContaining({ name: "main" }),
     );
     expect(trees).toContainEqual(
       expect.objectContaining({ name: "fix-typo" }),
     );
+  });
+
+  it("marks the active tree when run from a branch folder", async () => {
+    const trees = await statusTrees(path.join(repoRoot, "fix-typo"));
+    const active = trees.find((t) => t.name === "fix-typo");
+    const inactive = trees.find((t) => t.name === "main");
+    expect(active?.active).toBe(true);
+    expect(inactive?.active).toBe(false);
+  });
+
+  it("marks no tree as active when run from the forest root", async () => {
+    const trees = await statusTrees(repoRoot);
+    const anyActive = trees.some((t) => t.active);
+    expect(anyActive).toBe(false);
   });
 });

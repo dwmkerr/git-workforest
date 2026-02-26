@@ -3,14 +3,14 @@ import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
 import { execSync } from "child_process";
-import { migrateToForest, detectContext } from "./init.js";
+import { migrateToForest, detectContext } from "./migrate.js";
 
-describe("init command", () => {
+describe("migrate command", () => {
   const quiet = { stdio: "pipe" as const };
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-init-test-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-migrate-test-"));
   });
 
   afterEach(async () => {

@@ -2,7 +2,7 @@ import path from "path";
 import { promises as fs } from "fs";
 import { getRepoRoot, getLocalBranch, isInsideWorktree } from "../git.js";
 
-export interface InitResult {
+export interface MigrateResult {
   repoRoot: string;
   treePath: string;
   branch: string;
@@ -13,7 +13,7 @@ export async function detectContext(cwd: string): Promise<"empty" | "repo"> {
   return "empty";
 }
 
-export async function migrateToForest(cwd: string): Promise<InitResult> {
+export async function migrateToForest(cwd: string): Promise<MigrateResult> {
   const gitRoot = await getRepoRoot(cwd);
   const branch = await getLocalBranch(gitRoot);
   const repoRoot = gitRoot;

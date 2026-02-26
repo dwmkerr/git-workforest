@@ -17,8 +17,9 @@ lint: # Type-check without emitting.
 	npm run lint
 
 .PHONY: dev
-dev: # Start TypeScript compiler in watch mode.
+dev: # Start TypeScript compiler in watch mode. Alias 'workforest' to dev.
 	npm run dev
+	npm run link
 
 .PHONY: install
 install: build # Build and install the CLI globally.

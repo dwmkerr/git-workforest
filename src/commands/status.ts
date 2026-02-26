@@ -10,14 +10,16 @@ export interface TreeEntry {
   name: string;
   path: string;
   branch: string;
+  active: boolean;
 }
 
-export async function listTrees(cwd: string): Promise<TreeEntry[]> {
+export async function statusTrees(cwd: string): Promise<TreeEntry[]> {
   const forestRoot = await findForestRoot(cwd);
   if (!forestRoot) {
-    throw new Error("Not inside a workforest.");
+    throw new Error("not inside a workforest.");
   }
 
+  const resolvedCwd = path.resolve(cwd);
   const entries = await fs.readdir(forestRoot, { withFileTypes: true });
   const trees: TreeEntry[] = [];
 
@@ -30,10 +32,12 @@ export async function listTrees(cwd: string): Promise<TreeEntry[]> {
         ["branch", "--show-current"],
         { cwd: entryPath },
       );
+      const active = resolvedCwd.startsWith(entryPath);
       trees.push({
         name: entry.name,
         path: entryPath,
         branch: stdout.trim(),
+        active,
       });
     } catch {
       // Not a git directory, skip

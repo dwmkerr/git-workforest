@@ -4,11 +4,11 @@ import ora from "ora";
 import { loadConfig } from "./config.js";
 import { cloneCommand } from "./commands/clone.js";
 import { treeCommand } from "./commands/tree.js";
-import { detectContext, migrateToForest } from "./commands/init.js";
+import { detectContext, migrateToForest } from "./commands/migrate.js";
 import { resolveRepoPath } from "./paths.js";
 import readline from "readline/promises";
 import chalk from "chalk";
-import { listTrees } from "./commands/list.js";
+import { statusTrees } from "./commands/status.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
@@ -34,7 +34,24 @@ program
   .description(
     "Managed worktrees with structure. Clone once, branch into folders.",
   )
-  .version(version);
+  .version(version)
+  .action(() => {
+    console.log("usage:");
+    console.log("");
+    console.log("  clone a repo into a structured forest:");
+    console.log("    git forest clone dwmkerr/effective-shell");
+    console.log("");
+    console.log("  migrate an existing repo to forest layout:");
+    console.log("    cd ~/repos/myproject && git forest migrate");
+    console.log("");
+    console.log("  create a worktree for a branch:");
+    console.log("    git forest tree fix-typo");
+    console.log("");
+    console.log("  show forest status:");
+    console.log("    git forest status");
+    console.log("");
+    console.log(`run ${chalk.dim("git forest --help")} for all options.`);
+  });
 
 program
   .command("clone <repo>")
@@ -98,8 +115,8 @@ program
   });
 
 program
-  .command("init")
-  .description("Interactive setup: clone a new repo or migrate an existing one")
+  .command("migrate")
+  .description("Migrate an existing repo to forest layout, or clone a new one")
   .action(async () => {
     const spinner = ora();
     try {
@@ -145,18 +162,20 @@ program
   });
 
 program
-  .command("list")
-  .description("Show trees for the current forest")
+  .command("status")
+  .description("Show trees and current branch for the forest")
   .action(async () => {
     try {
-      const trees = await listTrees(process.cwd());
+      const trees = await statusTrees(process.cwd());
       if (trees.length === 0) {
         console.log("no trees found.");
         return;
       }
       for (const tree of trees) {
+        const prefix = tree.active ? "* " : "  ";
+        const name = tree.active ? chalk.green(tree.name) : tree.name;
         console.log(
-          `  ${chalk.green(tree.name)}  ${chalk.dim(tree.branch)}  ${chalk.dim(tree.path)}`,
+          `${prefix}${name}  ${chalk.dim(tree.branch)}  ${chalk.dim(tree.path)}`,
         );
       }
     } catch (err: unknown) {

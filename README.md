@@ -20,17 +20,16 @@ Clone a new repo:
 
 ```bash
 git forest clone dwmkerr/effective-shell
-# Clone dwmkerr/effective-shell to ~/repos/github/dwmkerr/effective-shell
-# Continue? (Y/n)
+# clone dwmkerr/effective-shell to ~/repos/github/dwmkerr/effective-shell? (Y/n)
 # also: git-workforest clone, workforest clone
 ```
 
-Or initialise from an existing repo:
+Or migrate an existing repo to forest layout:
 
 ```bash
 cd ~/repos/effective-shell
-git forest init
-# also: git-workforest init, workforest init
+git forest migrate
+# also: git-workforest migrate, workforest migrate
 ```
 
 That's it. Your repo is now a forest — each branch gets its own folder.
@@ -60,8 +59,7 @@ Clone a GitHub repo into the structured forest path:
 
 ```bash
 git forest clone dwmkerr/effective-shell
-# Clone dwmkerr/effective-shell to ~/repos/github/dwmkerr/effective-shell
-# Continue? (Y/n)
+# clone dwmkerr/effective-shell to ~/repos/github/dwmkerr/effective-shell? (Y/n)
 ```
 
 Shows the proposed location and asks for confirmation. Use `-y` to skip the prompt. Creates the forest root, clones into a subfolder named after the default branch, and writes a `.workforest.yaml` marker.
@@ -77,21 +75,22 @@ git forest tree fix-typo
 
 Run from inside any tree in the forest. Detects the forest root automatically.
 
-### `git forest init`
+### `git forest migrate`
 
-Interactive setup. Detects your current context:
+Migrate an existing repo to forest layout. Detects your current context:
 
-- **Inside a git repo** - offers to migrate into forest layout
-- **Empty directory** - prompts for `org/repo` to clone
+- **Inside a git repo** — offers to migrate into forest layout
+- **Empty directory** — prompts for `org/repo` to clone
 
-### `git forest list`
+### `git forest status`
 
-Show all trees in the current forest:
+Show all trees in the current forest. Highlights the active branch when run from inside a tree:
 
 ```bash
-git forest list
-#   main  main  ~/repos/github/dwmkerr/effective-shell/main
-#   fix-typo  fix-typo  ~/repos/github/dwmkerr/effective-shell/fix-typo
+cd ~/repos/github/dwmkerr/effective-shell/fix-typo
+git forest status
+# * fix-typo  fix-typo  ~/repos/github/dwmkerr/effective-shell/fix-typo
+#   main      main      ~/repos/github/dwmkerr/effective-shell/main
 ```
 
 ## Configuration
@@ -123,15 +122,14 @@ npm install
 Build and test:
 
 ```bash
-npm run build
-npm test
+make build
+make test
 ```
 
-Run in development:
+Install globally:
 
 ```bash
-npm run dev     # watch mode for TypeScript
-npx vitest      # watch mode for tests
+make install
 ```
 
 ## License
