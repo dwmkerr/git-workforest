@@ -13,6 +13,20 @@ import { listTrees } from "./commands/list.js";
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
 
+function error(message: string): void {
+  console.error(`${chalk.red("error:")} ${message}`);
+}
+
+async function confirm(question: string): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  const answer = await rl.question(question);
+  rl.close();
+  return answer.toLowerCase() !== "n";
+}
+
 const program = new Command();
 
 program
@@ -33,7 +47,7 @@ program
       const parts = repo.split("/");
       if (parts.length !== 2) {
         throw new Error(
-          "Expected format: org/repo (e.g. dwmkerr/effective-shell)",
+          "expected format: org/repo (e.g. dwmkerr/effective-shell)",
         );
       }
       const [org, repoName] = parts;
@@ -45,25 +59,22 @@ program
       });
 
       if (!opts.yes) {
-        console.log(`Clone ${org}/${repoName} to ${targetPath}`);
-        const rl = readline.createInterface({
-          input: process.stdin,
-          output: process.stdout,
-        });
-        const answer = await rl.question("Continue? (Y/n) ");
-        rl.close();
-        if (answer.toLowerCase() === "n") {
-          console.log("Aborted.");
+        const ok = await confirm(
+          `clone ${org}/${repoName} to ${targetPath}? (Y/n) `,
+        );
+        if (!ok) {
+          console.log("aborted.");
           return;
         }
       }
 
-      spinner.start(`Cloning ${org}/${repoName}...`);
+      spinner.start(`cloning ${org}/${repoName}...`);
       const result = await cloneCommand(repoUrl, org, repoName, config);
-      spinner.succeed(`Cloned to ${result.treePath}`);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      spinner.fail(message);
+      spinner.succeed(`cloned to ${result.treePath}`);
+    } catch (err: unknown) {
+      spinner.stop();
+      const message = err instanceof Error ? err.message : String(err);
+      error(message);
       process.exit(1);
     }
   });
@@ -75,12 +86,13 @@ program
     const spinner = ora();
     try {
       const config = await loadConfig();
-      spinner.start(`Creating tree for ${branch}...`);
+      spinner.start(`creating tree for ${branch}...`);
       const result = await treeCommand(branch, process.cwd(), config);
-      spinner.succeed(`Tree created at ${result.treePath}`);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      spinner.fail(message);
+      spinner.succeed(`tree created at ${result.treePath}`);
+    } catch (err: unknown) {
+      spinner.stop();
+      const message = err instanceof Error ? err.message : String(err);
+      error(message);
       process.exit(1);
     }
   });
@@ -95,43 +107,39 @@ program
       const context = await detectContext(process.cwd());
 
       if (context === "repo") {
-        const rl = readline.createInterface({
-          input: process.stdin,
-          output: process.stdout,
-        });
-        const answer = await rl.question(
-          "Existing repo detected. Migrate to forest layout? (y/N) ",
+        const ok = await confirm(
+          "existing repo detected. migrate to forest layout? (y/N) ",
         );
-        rl.close();
-        if (answer.toLowerCase() !== "y") {
-          console.log("Aborted.");
+        if (!ok) {
+          console.log("aborted.");
           return;
         }
-        spinner.start("Migrating to forest layout...");
+        spinner.start("migrating to forest layout...");
         const result = await migrateToForest(process.cwd());
-        spinner.succeed(`Migrated. Main tree at ${result.treePath}`);
+        spinner.succeed(`migrated. main tree at ${result.treePath}`);
       } else {
         const rl = readline.createInterface({
           input: process.stdin,
           output: process.stdout,
         });
         const repo = await rl.question(
-          "No repo found. Enter org/repo to clone (e.g. dwmkerr/effective-shell): ",
+          "no repo found. enter org/repo to clone (e.g. dwmkerr/effective-shell): ",
         );
         rl.close();
         if (!repo || !repo.includes("/")) {
-          console.log("Aborted.");
+          console.log("aborted.");
           return;
         }
         const [org, repoName] = repo.split("/");
         const repoUrl = `git@github.com:${org}/${repoName}`;
-        spinner.start(`Cloning ${org}/${repoName}...`);
+        spinner.start(`cloning ${org}/${repoName}...`);
         const result = await cloneCommand(repoUrl, org, repoName, config);
-        spinner.succeed(`Cloned to ${result.treePath}`);
+        spinner.succeed(`cloned to ${result.treePath}`);
       }
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      spinner.fail(message);
+    } catch (err: unknown) {
+      spinner.stop();
+      const message = err instanceof Error ? err.message : String(err);
+      error(message);
       process.exit(1);
     }
   });
@@ -143,7 +151,7 @@ program
     try {
       const trees = await listTrees(process.cwd());
       if (trees.length === 0) {
-        console.log("No trees found.");
+        console.log("no trees found.");
         return;
       }
       for (const tree of trees) {
@@ -151,9 +159,9 @@ program
           `  ${chalk.green(tree.name)}  ${chalk.dim(tree.branch)}  ${chalk.dim(tree.path)}`,
         );
       }
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error(message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      error(message);
       process.exit(1);
     }
   });
