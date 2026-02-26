@@ -4,6 +4,7 @@
   "description": "Managed worktrees with structure. Clone once, branch into folders.",
   "type": "module",
   "bin": {
+    "workforest": "./bin/git-workforest.js",
     "git-workforest": "./bin/git-workforest.js",
     "git-forest": "./bin/git-workforest.js"
   },
