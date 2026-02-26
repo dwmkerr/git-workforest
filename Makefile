@@ -16,6 +16,11 @@ test: # Run the test suite.
 lint: # Type-check without emitting.
 	npm run lint
 
+.PHONY: ci
+ci: # Run lint and tests (used by CI pipeline).
+	$(MAKE) lint
+	$(MAKE) test
+
 .PHONY: dev
 dev: # Start TypeScript compiler in watch mode. Alias 'workforest' to dev.
 	npm run dev
