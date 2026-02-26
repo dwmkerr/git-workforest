@@ -5,6 +5,7 @@ import { loadConfig } from "./config.js";
 import { cloneCommand } from "./commands/clone.js";
 import { treeCommand } from "./commands/tree.js";
 import { detectContext, migrateToForest } from "./commands/init.js";
+import { resolveRepoPath } from "./paths.js";
 import readline from "readline/promises";
 import chalk from "chalk";
 import { listTrees } from "./commands/list.js";
@@ -24,7 +25,8 @@ program
 program
   .command("clone <repo>")
   .description("Clone a GitHub repo into the structured forest path")
-  .action(async (repo: string) => {
+  .option("-y, --yes", "Skip confirmation prompt")
+  .action(async (repo: string, opts: { yes?: boolean }) => {
     const spinner = ora();
     try {
       const config = await loadConfig();
@@ -36,6 +38,26 @@ program
       }
       const [org, repoName] = parts;
       const repoUrl = `git@github.com:${org}/${repoName}`;
+      const targetPath = resolveRepoPath(config.reposDir, {
+        provider: "github",
+        org,
+        repo: repoName,
+      });
+
+      if (!opts.yes) {
+        console.log(`Clone ${org}/${repoName} to ${targetPath}`);
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout,
+        });
+        const answer = await rl.question("Continue? (Y/n) ");
+        rl.close();
+        if (answer.toLowerCase() === "n") {
+          console.log("Aborted.");
+          return;
+        }
+      }
+
       spinner.start(`Cloning ${org}/${repoName}...`);
       const result = await cloneCommand(repoUrl, org, repoName, config);
       spinner.succeed(`Cloned to ${result.treePath}`);

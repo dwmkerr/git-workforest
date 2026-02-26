@@ -20,6 +20,8 @@ Clone a new repo:
 
 ```bash
 git forest clone dwmkerr/effective-shell
+# Clone dwmkerr/effective-shell to ~/repos/github/dwmkerr/effective-shell
+# Continue? (Y/n)
 # also: git-workforest clone, workforest clone
 ```
 
@@ -58,9 +60,11 @@ Clone a GitHub repo into the structured forest path:
 
 ```bash
 git forest clone dwmkerr/effective-shell
+# Clone dwmkerr/effective-shell to ~/repos/github/dwmkerr/effective-shell
+# Continue? (Y/n)
 ```
 
-Creates the forest root at the configured `reposDir` path, clones into a subfolder named after the default branch, and writes a `.workforest.yaml` marker.
+Shows the proposed location and asks for confirmation. Use `-y` to skip the prompt. Creates the forest root, clones into a subfolder named after the default branch, and writes a `.workforest.yaml` marker.
 
 ### `git forest tree <branch>`
 
