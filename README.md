@@ -13,25 +13,25 @@
 Install:
 
 ```bash
-npm install -g workforest
+npm install -g @dwmkerr/git-workforest
 ```
 
-Clone a repo into a structured forest:
+Clone a new repo:
 
 ```bash
 git forest clone dwmkerr/effective-shell
-# ~/repos/github/dwmkerr/effective-shell/main/
+# also: git-workforest clone, workforest clone
 ```
 
-Create a worktree for a new branch:
+Or initialise from an existing repo:
 
 ```bash
-cd ~/repos/github/dwmkerr/effective-shell/main
-git forest tree fix-typo
-# ~/repos/github/dwmkerr/effective-shell/fix-typo/
+cd ~/repos/effective-shell
+git forest init
+# also: git-workforest init, workforest init
 ```
 
-That's it. Each branch gets its own folder.
+That's it. Your repo is now a forest — each branch gets its own folder.
 
 ## How it works
 
