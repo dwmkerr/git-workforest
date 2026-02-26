@@ -44,7 +44,10 @@ examples:
   git forest clone dwmkerr/effective-shell
 
   # migrate an existing repo to forest layout
-  cd ~/repos/myproject && git forest migrate`,
+  cd ~/repos/myproject && git forest migrate
+
+  # show forest status
+  git forest status`,
   );
 
 program
