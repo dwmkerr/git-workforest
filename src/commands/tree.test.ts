@@ -50,4 +50,16 @@ describe("tree command", () => {
     const stat = await fs.stat(gitDir);
     expect(stat.isDirectory()).toBe(true);
   });
+
+  it("throws with clone/migrate hint when outside a forest", async () => {
+    const outside = await fs.mkdtemp(path.join(os.tmpdir(), "wf-no-forest-"));
+    const config = { ...DEFAULT_CONFIG };
+    try {
+      await expect(treeCommand("some-branch", outside, config)).rejects.toThrow(
+        /not inside a workforest.*try 'git forest clone/s,
+      );
+    } finally {
+      await fs.rm(outside, { recursive: true });
+    }
+  });
 });

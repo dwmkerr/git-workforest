@@ -58,6 +58,20 @@ export async function isInsideWorktree(dir: string): Promise<boolean> {
   }
 }
 
+export async function getRepoName(dir: string, fallback?: string): Promise<string> {
+  try {
+    const { stdout } = await exec("git", ["remote", "get-url", "origin"], {
+      cwd: dir,
+    });
+    const url = stdout.trim();
+    const match = url.match(/[/:]([^/]+\/[^/]+?)(?:\.git)?$/);
+    if (match) return match[1];
+  } catch {
+    // no remote configured
+  }
+  return fallback || dir.split("/").pop() || dir;
+}
+
 export async function getRepoRoot(dir: string): Promise<string> {
   const { stdout } = await exec(
     "git",

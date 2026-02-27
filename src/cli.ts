@@ -4,11 +4,17 @@ import ora from "ora";
 import { loadConfig } from "./config.js";
 import { cloneCommand } from "./commands/clone.js";
 import { treeCommand } from "./commands/tree.js";
-import { detectContext, migrateToForest } from "./commands/migrate.js";
+import {
+  detectContext,
+  migrateToForest,
+  buildMigratePreview,
+} from "./commands/migrate.js";
 import { resolveRepoPath } from "./paths.js";
 import readline from "readline/promises";
 import chalk from "chalk";
-import { statusTrees } from "./commands/status.js";
+import path from "path";
+import { statusTrees, formatTreeLine } from "./commands/status.js";
+import { getRepoName } from "./git.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
@@ -121,16 +127,24 @@ program
       const context = await detectContext(process.cwd());
 
       if (context === "repo") {
-        const ok = await confirm(
-          "existing repo detected. migrate to forest layout? (y/N) ",
-        );
+        const { getLocalBranch, getRepoRoot } = await import("./git.js");
+        const gitRoot = await getRepoRoot(process.cwd());
+        const branch = await getLocalBranch(gitRoot);
+
+        console.log("\nexisting repo detected. migration preview:\n");
+        const preview = await buildMigratePreview(process.cwd(), branch);
+        console.log(preview);
+        console.log();
+
+        const ok = await confirm("migrate to forest layout? (y/N) ");
         if (!ok) {
           console.log("aborted.");
           return;
         }
-        spinner.start("migrating to forest layout...");
+        spinner.start("migrating...");
         const result = await migrateToForest(process.cwd());
-        spinner.succeed(`migrated. main tree at ${result.treePath}`);
+        spinner.succeed("migrated to forest layout");
+        console.log(chalk.cyan(`cd ${result.branch}`));
       } else {
         const rl = readline.createInterface({
           input: process.stdin,
@@ -163,17 +177,26 @@ program
   .description("Show trees and current branch for the forest")
   .action(async () => {
     try {
-      const trees = await statusTrees(process.cwd());
+      const { forestRoot, trees } = await statusTrees(process.cwd());
       if (trees.length === 0) {
         console.log("no trees found.");
         return;
       }
+
+      const activeTree = trees.find((t) => t.active);
+      const repoName = await getRepoName(trees[0].path, path.basename(forestRoot));
+      if (activeTree) {
+        console.log(`on branch ${activeTree.branch} in ${repoName}`);
+      } else {
+        console.log(`in ${repoName}`);
+      }
+      console.log();
+      console.log("trees:");
       for (const tree of trees) {
         const prefix = tree.active ? "* " : "  ";
-        const name = tree.active ? chalk.green(tree.name) : tree.name;
-        console.log(
-          `${prefix}${name}  ${chalk.dim(tree.branch)}  ${chalk.dim(tree.path)}`,
-        );
+        const branch = tree.active ? chalk.green(tree.branch) : tree.branch;
+        const rel = chalk.dim("./" + path.relative(forestRoot, tree.path));
+        console.log(`${prefix}${branch}  ${rel}`);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

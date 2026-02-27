@@ -13,10 +13,17 @@ export interface TreeEntry {
   active: boolean;
 }
 
-export async function statusTrees(cwd: string): Promise<TreeEntry[]> {
+export interface ForestStatus {
+  forestRoot: string;
+  trees: TreeEntry[];
+}
+
+export async function statusTrees(cwd: string): Promise<ForestStatus> {
   const forestRoot = await findForestRoot(cwd);
   if (!forestRoot) {
-    throw new Error("not inside a workforest.");
+    throw new Error(
+      "not inside a workforest.\ntry 'git forest clone <org/repo>' or 'git forest migrate'",
+    );
   }
 
   const resolvedCwd = path.resolve(cwd);
@@ -44,5 +51,11 @@ export async function statusTrees(cwd: string): Promise<TreeEntry[]> {
     }
   }
 
-  return trees;
+  return { forestRoot, trees };
+}
+
+export function formatTreeLine(tree: TreeEntry, forestRoot: string): string {
+  const prefix = tree.active ? "* " : "  ";
+  const rel = "./" + path.relative(forestRoot, tree.path);
+  return `${prefix}${tree.branch}  ${rel}`;
 }

@@ -15,7 +15,7 @@ export async function treeCommand(
   const forestRoot = await findForestRoot(cwd);
   if (!forestRoot) {
     throw new Error(
-      "Not inside a workforest. Run 'git forest clone' or 'git forest init' first.",
+      "not inside a workforest.\ntry 'git forest clone <org/repo>' or 'git forest migrate'",
     );
   }
 

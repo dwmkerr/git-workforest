@@ -10,6 +10,7 @@ import {
   isInsideWorktree,
   getRepoRoot,
   gitFatClone,
+  getRepoName,
 } from "./git.js";
 
 describe("git", () => {
@@ -73,6 +74,37 @@ describe("git", () => {
       const gitDir = path.join(fatPath, ".git");
       const stat = await fs.stat(gitDir);
       expect(stat.isDirectory()).toBe(true);
+    });
+  });
+
+  describe("getRepoName", () => {
+    it("extracts org/repo from SSH remote URL", async () => {
+      const cloneDir = path.join(tmpDir, "for-reponame");
+      await gitClone(bareRepo, cloneDir);
+      execSync(
+        `cd "${cloneDir}" && git remote set-url origin git@github.com:dwmkerr/workforest.git`,
+        quiet,
+      );
+      const name = await getRepoName(cloneDir);
+      expect(name).toBe("dwmkerr/workforest");
+    });
+
+    it("extracts org/repo from HTTPS remote URL", async () => {
+      const cloneDir = path.join(tmpDir, "for-reponame-https");
+      await gitClone(bareRepo, cloneDir);
+      execSync(
+        `cd "${cloneDir}" && git remote set-url origin https://github.com/dwmkerr/workforest.git`,
+        quiet,
+      );
+      const name = await getRepoName(cloneDir);
+      expect(name).toBe("dwmkerr/workforest");
+    });
+
+    it("falls back to directory name when no remote", async () => {
+      const noRemoteDir = path.join(tmpDir, "my-project");
+      execSync(`git init "${noRemoteDir}"`, quiet);
+      const name = await getRepoName(noRemoteDir);
+      expect(name).toBe("my-project");
     });
   });
 
