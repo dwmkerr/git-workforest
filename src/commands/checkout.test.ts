@@ -3,10 +3,10 @@ import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
 import { execSync } from "child_process";
-import { treeCommand } from "./tree.js";
+import { checkoutCommand } from "./checkout.js";
 import { DEFAULT_CONFIG } from "../config.js";
 
-describe("tree command", () => {
+describe("checkout command", () => {
   let tmpDir: string;
   let repoRoot: string;
   let mainDir: string;
@@ -14,7 +14,7 @@ describe("tree command", () => {
   const quiet = { stdio: "pipe" as const };
 
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-tree-test-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-checkout-test-"));
     repoRoot = path.join(tmpDir, "myrepo");
     mainDir = path.join(repoRoot, "main");
     const bareRepo = path.join(tmpDir, "bare.git");
@@ -34,32 +34,33 @@ describe("tree command", () => {
     await fs.rm(tmpDir, { recursive: true });
   });
 
-  it("creates a worktree for a new branch", async () => {
+  it("returns existing tree without creating a new one", async () => {
     const config = { ...DEFAULT_CONFIG };
-    const result = await treeCommand("fix-typo", mainDir, config);
+    const branch = execSync("git branch --show-current", {
+      cwd: mainDir,
+      encoding: "utf-8",
+    }).trim();
+    const result = await checkoutCommand(branch, mainDir, config);
+    expect(result.created).toBe(false);
+    expect(result.treePath).toBe(mainDir);
+    expect(result.branch).toBe(branch);
+  });
+
+  it("creates a new tree when branch does not exist", async () => {
+    const config = { ...DEFAULT_CONFIG };
+    const result = await checkoutCommand("fix-typo", mainDir, config);
+    expect(result.created).toBe(true);
     expect(result.treePath).toBe(path.join(repoRoot, "fix-typo"));
     const stat = await fs.stat(result.treePath);
     expect(stat.isDirectory()).toBe(true);
   });
 
-  it("uses fat clone when fatTrees is true", async () => {
-    const config = { ...DEFAULT_CONFIG, fatTrees: true };
-    const result = await treeCommand("fix-typo", mainDir, config);
-    expect(result.treePath).toBe(path.join(repoRoot, "fix-typo"));
-    const gitDir = path.join(result.treePath, ".git");
-    const stat = await fs.stat(gitDir);
-    expect(stat.isDirectory()).toBe(true);
-  });
-
-  it("throws with clone/migrate hint when outside a forest", async () => {
-    const outside = await fs.mkdtemp(path.join(os.tmpdir(), "wf-no-forest-"));
+  it("throws when not inside a workforest", async () => {
+    const randomDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-no-forest-"));
     const config = { ...DEFAULT_CONFIG };
-    try {
-      await expect(treeCommand("some-branch", outside, config)).rejects.toThrow(
-        /not inside a workforest.*try 'git forest clone/s,
-      );
-    } finally {
-      await fs.rm(outside, { recursive: true });
-    }
+    await expect(
+      checkoutCommand("main", randomDir, config),
+    ).rejects.toThrow("not inside a workforest");
+    await fs.rm(randomDir, { recursive: true });
   });
 });

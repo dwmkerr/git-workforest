@@ -3,7 +3,7 @@ import { createRequire } from "module";
 import ora from "ora";
 import { loadConfig } from "./config.js";
 import { cloneCommand } from "./commands/clone.js";
-import { treeCommand } from "./commands/tree.js";
+import { checkoutCommand } from "./commands/checkout.js";
 import {
   detectContext,
   migrateToForest,
@@ -100,15 +100,22 @@ program
   });
 
 program
-  .command("tree <branch>")
-  .description("Create a new tree (worktree or clone) for a branch")
+  .command("checkout <branch>")
+  .alias("tree")
+  .description("check out a branch (find or create its tree)")
   .action(async (branch: string) => {
     const spinner = ora();
     try {
       const config = await loadConfig();
-      spinner.start(`creating tree for ${branch}...`);
-      const result = await treeCommand(branch, process.cwd(), config);
-      spinner.succeed(`tree created at ${result.treePath}`);
+      spinner.start(`checking out ${branch}...`);
+      const result = await checkoutCommand(branch, process.cwd(), config);
+      if (result.created) {
+        spinner.succeed(`tree created at ${result.treePath}`);
+      } else {
+        spinner.stop();
+      }
+      const rel = path.relative(process.cwd(), result.treePath);
+      console.log(chalk.cyan(`cd ${rel}`));
     } catch (err: unknown) {
       spinner.stop();
       const message = err instanceof Error ? err.message : String(err);
