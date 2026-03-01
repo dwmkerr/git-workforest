@@ -29,7 +29,7 @@ Or migrate an existing repo to forest layout:
 ```bash
 cd ~/repos/effective-shell
 git forest migrate
-# also: git-workforest migrate, workforest migrate
+# you can also use the aliases 'git-workforest' or 'workforest'
 ```
 
 That's it. Your repo is now a forest — each branch gets its own folder.
