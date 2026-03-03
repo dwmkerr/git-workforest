@@ -113,23 +113,26 @@ program
   .alias("tree")
   .description("check out a branch (find or create its tree)")
   .action(async (branch: string) => {
-    const spinner = ora();
     try {
       const config = await loadConfig();
-      spinner.start(`checking out ${branch}...`);
       const result = await checkoutCommand(branch, process.cwd(), config);
       if (result.created) {
-        spinner.succeed(`tree created at ${result.treePath}`);
+        console.log(`checked out ${chalk.green(result.branch)}.`);
       } else {
-        spinner.stop();
+        console.log(`already checked out.`);
       }
       const rel = path.relative(process.cwd(), result.treePath);
       printCdHint(rel);
     } catch (err: unknown) {
-      spinner.stop();
       const message = err instanceof Error ? err.message : String(err);
-      error(message);
-      process.exit(1);
+      if (message.includes("not inside a workforest")) {
+        console.log("not a forest. to get started:\n");
+        console.log(`  ${chalk.whiteBright("git forest migrate")}`);
+        console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
+      } else {
+        error(message);
+        process.exit(1);
+      }
     }
   });
 
@@ -289,8 +292,14 @@ program
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      error(message);
-      process.exit(1);
+      if (message.includes("not inside a workforest")) {
+        console.log("not a forest. to get started:\n");
+        console.log(`  ${chalk.whiteBright("git forest migrate")}`);
+        console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
+      } else {
+        error(message);
+        process.exit(1);
+      }
     }
   });
 
