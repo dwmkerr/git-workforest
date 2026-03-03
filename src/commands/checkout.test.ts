@@ -22,7 +22,7 @@ describe("checkout command", () => {
     const seedDir = path.join(tmpDir, "seed");
     execSync(`git clone "${bareRepo}" "${seedDir}"`, quiet);
     execSync(
-      `cd "${seedDir}" && git config user.email "test@test.com" && git config user.name "Test" && touch README.md && git add . && git commit -m "init" && git push`,
+      `cd "${seedDir}" && git config user.email "test@test.com" && git config user.name "Test" && git config commit.gpgsign false && touch README.md && git add . && git commit -m "init" && git push`,
       quiet,
     );
     await fs.mkdir(repoRoot, { recursive: true });

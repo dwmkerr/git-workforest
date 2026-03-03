@@ -31,34 +31,38 @@ describe("migrate command", () => {
     it("returns 'empty' outside a git repo", async () => {
       expect(await detectContext(tmpDir)).toBe("empty");
     });
+
+    it("returns 'forest' when .workforest.yaml exists", async () => {
+      const forestDir = path.join(tmpDir, "myforest");
+      await fs.mkdir(forestDir);
+      await fs.writeFile(path.join(forestDir, ".workforest.yaml"), "");
+      expect(await detectContext(forestDir)).toBe("forest");
+    });
   });
 
   describe("buildMigratePreview", () => {
-    it("shows before/after with top-level entries", async () => {
-      const dir = path.join(tmpDir, "previewtest");
-      await fs.mkdir(dir);
-      await fs.mkdir(path.join(dir, "src"));
-      await fs.writeFile(path.join(dir, "README.md"), "");
-      await fs.writeFile(path.join(dir, "package.json"), "");
-
-      const preview = await buildMigratePreview(dir, "main");
-      expect(preview).toContain("before:");
-      expect(preview).toContain("after:");
-      expect(preview).toContain("src/");
-      expect(preview).toContain("README.md");
+    it("shows before/after tree diagram with repo name and branch", () => {
+      const preview = buildMigratePreview("gdog", "main");
+      expect(preview).toContain("# before");
+      expect(preview).toContain("gdog/");
+      expect(preview).toContain("# after");
       expect(preview).toContain(".workforest.yaml");
       expect(preview).toContain("main/");
+      expect(preview).toContain("# main branch");
     });
 
-    it("truncates when more than 6 entries", async () => {
-      const dir = path.join(tmpDir, "manyfiles");
-      await fs.mkdir(dir);
-      for (let i = 0; i < 8; i++) {
-        await fs.writeFile(path.join(dir, `file${i}.txt`), "");
-      }
+    it("shows worktree placeholders", () => {
+      const preview = buildMigratePreview("gdog", "main");
+      expect(preview).toContain("<branch-1>/");
+      expect(preview).toContain("<branch-2>/");
+      expect(preview).toContain("# worktree");
+      expect(preview).toContain("# etc");
+    });
 
-      const preview = await buildMigratePreview(dir, "main");
-      expect(preview).toContain("... (8 items)");
+    it("uses provided repo name and branch", () => {
+      const preview = buildMigratePreview("myproject", "develop");
+      expect(preview).toContain("myproject/");
+      expect(preview).toContain("develop/");
     });
   });
 
@@ -67,7 +71,7 @@ describe("migrate command", () => {
       const repoDir = path.join(tmpDir, "myrepo");
       execSync(`git init "${repoDir}"`, quiet);
       execSync(
-        `cd "${repoDir}" && git config user.email "test@test.com" && git config user.name "Test" && touch README.md && git add . && git commit -m "init"`,
+        `cd "${repoDir}" && git config user.email "test@test.com" && git config user.name "Test" && git config commit.gpgsign false && touch README.md && git add . && git commit -m "init"`,
         quiet,
       );
 
@@ -82,7 +86,7 @@ describe("migrate command", () => {
       const repoDir = path.join(tmpDir, "myrepo");
       execSync(`git init "${repoDir}"`, quiet);
       execSync(
-        `cd "${repoDir}" && git config user.email "test@test.com" && git config user.name "Test" && touch README.md && git add . && git commit -m "init"`,
+        `cd "${repoDir}" && git config user.email "test@test.com" && git config user.name "Test" && git config commit.gpgsign false && touch README.md && git add . && git commit -m "init"`,
         quiet,
       );
 
