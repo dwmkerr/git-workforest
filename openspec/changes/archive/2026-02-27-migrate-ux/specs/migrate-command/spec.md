@@ -1,26 +1,4 @@
-## Purpose
-
-Migrate an existing repo to forest layout, or clone a new one interactively.
-
-## Requirements
-
-### Requirement: migrate detects context
-The CLI SHALL detect whether the current directory is inside a git repo or not.
-
-#### Scenario: inside a git repo
-- **WHEN** user runs `workforest migrate` inside a git repository
-- **THEN** the CLI SHALL offer to migrate the repo into forest layout
-
-#### Scenario: outside a git repo
-- **WHEN** user runs `workforest migrate` outside any git repository
-- **THEN** the CLI SHALL prompt for an `org/repo` to clone
-
-### Requirement: migrate converts existing repo to forest layout
-The CLI SHALL move the existing repo into a subdirectory named after the current branch and create a `.workforest.yaml` marker.
-
-#### Scenario: successful migration
-- **WHEN** user confirms migration
-- **THEN** the repo SHALL be moved to `<original-path>/<branch>/` and a `.workforest.yaml` marker SHALL be created at the original path
+## ADDED Requirements
 
 ### Requirement: migrate shows before/after preview
 The CLI SHALL show a before/after preview of the directory structure before asking for confirmation.
@@ -43,6 +21,8 @@ The CLI SHALL print a `cd` command after successful migration so the user knows 
 #### Scenario: cd hint uses relative path when possible
 - **WHEN** the new tree is a child of the current directory
 - **THEN** the CLI SHALL show `cd <branch>` (e.g., `cd main`) rather than the full absolute path
+
+## MODIFIED Requirements
 
 ### Requirement: migrate requires confirmation
 The CLI SHALL ask for confirmation before migrating. The confirmation prompt SHALL appear after the before/after preview.

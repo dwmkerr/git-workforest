@@ -3,18 +3,30 @@ import { createRequire } from "module";
 import ora from "ora";
 import { loadConfig } from "./config.js";
 import { cloneCommand } from "./commands/clone.js";
-import { treeCommand } from "./commands/tree.js";
-import { detectContext, migrateToForest } from "./commands/migrate.js";
+import { checkoutCommand } from "./commands/checkout.js";
+import {
+  detectContext,
+  migrateToForest,
+  buildMigratePreview,
+} from "./commands/migrate.js";
 import { resolveRepoPath } from "./paths.js";
 import readline from "readline/promises";
 import chalk from "chalk";
-import { statusTrees } from "./commands/status.js";
+import path from "path";
+import { statusTrees, formatTreeLine } from "./commands/status.js";
+import { getRepoName } from "./git.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
 
 function error(message: string): void {
   console.error(`${chalk.red("error:")} ${message}`);
+}
+
+function printCdHint(dir: string): void {
+  console.log();
+  console.log(chalk.dim("# please change directory:"));
+  console.log(chalk.whiteBright(`cd ${dir}`));
 }
 
 async function confirm(question: string): Promise<boolean> {
@@ -39,6 +51,9 @@ program
     "after",
     `
 examples:
+
+  # set up a forest (detects context automatically)
+  git forest init
 
   # clone a repo into a structured forest
   git forest clone dwmkerr/effective-shell
@@ -94,15 +109,22 @@ program
   });
 
 program
-  .command("tree <branch>")
-  .description("Create a new tree (worktree or clone) for a branch")
+  .command("checkout <branch>")
+  .alias("tree")
+  .description("check out a branch (find or create its tree)")
   .action(async (branch: string) => {
     const spinner = ora();
     try {
       const config = await loadConfig();
-      spinner.start(`creating tree for ${branch}...`);
-      const result = await treeCommand(branch, process.cwd(), config);
-      spinner.succeed(`tree created at ${result.treePath}`);
+      spinner.start(`checking out ${branch}...`);
+      const result = await checkoutCommand(branch, process.cwd(), config);
+      if (result.created) {
+        spinner.succeed(`tree created at ${result.treePath}`);
+      } else {
+        spinner.stop();
+      }
+      const rel = path.relative(process.cwd(), result.treePath);
+      printCdHint(rel);
     } catch (err: unknown) {
       spinner.stop();
       const message = err instanceof Error ? err.message : String(err);
@@ -121,16 +143,26 @@ program
       const context = await detectContext(process.cwd());
 
       if (context === "repo") {
-        const ok = await confirm(
-          "existing repo detected. migrate to forest layout? (y/N) ",
-        );
+        const { getLocalBranch, getRepoRoot } = await import("./git.js");
+        const gitRoot = await getRepoRoot(process.cwd());
+        const branch = await getLocalBranch(gitRoot);
+
+        const repoName = path.basename(gitRoot);
+        console.log("\nexisting repo detected. migration preview:\n");
+        const preview = buildMigratePreview(repoName, branch);
+        const dimmed = preview.replace(/#.*/g, (m) => chalk.dim(m));
+        console.log(dimmed);
+        console.log();
+
+        console.log("no files will be changed, folder rename only.");
+        const ok = await confirm("migrate to forest layout? (y/N) ");
         if (!ok) {
           console.log("aborted.");
           return;
         }
-        spinner.start("migrating to forest layout...");
         const result = await migrateToForest(process.cwd());
-        spinner.succeed(`migrated. main tree at ${result.treePath}`);
+        console.log("migrated to forest layout.");
+        printCdHint(result.branch);
       } else {
         const rl = readline.createInterface({
           input: process.stdin,
@@ -159,21 +191,101 @@ program
   });
 
 program
+  .command("init")
+  .description("Detect context and set up a forest (migrate, clone, or show status)")
+  .action(async () => {
+    const spinner = ora();
+    try {
+      const context = await detectContext(process.cwd());
+
+      if (context === "forest") {
+        const { forestRoot, trees } = await statusTrees(process.cwd());
+        if (trees.length === 0) {
+          console.log("forest detected, no trees found.");
+          return;
+        }
+        const activeTree = trees.find((t) => t.active);
+        const repoName = await getRepoName(
+          trees[0].path,
+          path.basename(forestRoot),
+        );
+        if (activeTree) {
+          console.log(`already a forest. on branch ${chalk.green(activeTree.branch)} in ${repoName}`);
+        } else {
+          console.log(`already a forest. in ${repoName}`);
+        }
+        console.log();
+        console.log("trees:");
+        for (const tree of trees) {
+          const prefix = tree.active ? "* " : "  ";
+          const branch = tree.active
+            ? chalk.green(tree.branch)
+            : tree.branch;
+          const rel = chalk.blue(
+            "./" + path.relative(forestRoot, tree.path),
+          );
+          console.log(`${prefix}${branch}  ${rel}`);
+        }
+      } else if (context === "repo") {
+        const { getLocalBranch, getRepoRoot } = await import("./git.js");
+        const gitRoot = await getRepoRoot(process.cwd());
+        const branch = await getLocalBranch(gitRoot);
+        const config = await loadConfig();
+
+        const repoName = path.basename(gitRoot);
+        console.log("\nexisting repo detected. migration preview:\n");
+        const preview = buildMigratePreview(repoName, branch);
+        const dimmed = preview.replace(/#.*/g, (m) => chalk.dim(m));
+        console.log(dimmed);
+        console.log();
+
+        console.log("no files will be changed, folder rename only.");
+        const ok = await confirm("migrate to forest layout? (y/N) ");
+        if (!ok) {
+          console.log("aborted.");
+          return;
+        }
+        const result = await migrateToForest(process.cwd());
+        console.log("migrated to forest layout.");
+        printCdHint(result.branch);
+      } else {
+        console.log("no forest found. clone one with:\n");
+        console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
+        console.log(`  ${chalk.whiteBright("git forest clone git@github.com:org/repo.git")}`);
+      }
+    } catch (err: unknown) {
+      spinner.stop();
+      const message = err instanceof Error ? err.message : String(err);
+      error(message);
+      process.exit(1);
+    }
+  });
+
+program
   .command("status")
   .description("Show trees and current branch for the forest")
   .action(async () => {
     try {
-      const trees = await statusTrees(process.cwd());
+      const { forestRoot, trees } = await statusTrees(process.cwd());
       if (trees.length === 0) {
         console.log("no trees found.");
         return;
       }
+
+      const activeTree = trees.find((t) => t.active);
+      const repoName = await getRepoName(trees[0].path, path.basename(forestRoot));
+      if (activeTree) {
+        console.log(`on branch ${chalk.green(activeTree.branch)} in ${repoName}`);
+      } else {
+        console.log(`in ${repoName}`);
+      }
+      console.log();
+      console.log("trees:");
       for (const tree of trees) {
         const prefix = tree.active ? "* " : "  ";
-        const name = tree.active ? chalk.green(tree.name) : tree.name;
-        console.log(
-          `${prefix}${name}  ${chalk.dim(tree.branch)}  ${chalk.dim(tree.path)}`,
-        );
+        const branch = tree.active ? chalk.green(tree.branch) : tree.branch;
+        const rel = chalk.blue("./" + path.relative(forestRoot, tree.path));
+        console.log(`${prefix}${branch}  ${rel}`);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

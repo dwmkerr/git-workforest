@@ -29,7 +29,7 @@ Or migrate an existing repo to forest layout:
 ```bash
 cd ~/repos/effective-shell
 git forest migrate
-# also: git-workforest migrate, workforest migrate
+# you can also use the aliases 'git-workforest' or 'workforest'
 ```
 
 That's it. Your repo is now a forest — each branch gets its own folder.
@@ -75,12 +75,23 @@ git forest tree fix-typo
 
 Run from inside any tree in the forest. Detects the forest root automatically.
 
+### `git forest init`
+
+Detect your context and do the right thing:
+
+- **Inside a forest** — show status and trees
+- **Inside a git repo** — offer to migrate to forest layout
+- **Empty directory** — suggest `git forest clone`
+
+<img src="docs/screenshots/init.png" width="600" alt="git forest init" />
+
 ### `git forest migrate`
 
-Migrate an existing repo to forest layout. Detects your current context:
+Migrate an existing repo to forest layout. Shows a preview, asks for confirmation, then moves your repo contents into a branch subfolder.
 
-- **Inside a git repo** — offers to migrate into forest layout
-- **Empty directory** — prompts for `org/repo` to clone
+<img src="docs/screenshots/migrate.png" width="600" alt="git forest migrate" />
+
+Your shell stays at the forest root. No files are modified — just a folder rename.
 
 ### `git forest status`
 
