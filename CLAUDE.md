@@ -16,6 +16,7 @@
 
 - **Branch names**: green (`chalk.green`)
 - **Folder/path names**: blue (`chalk.blue`)
+- **Repo names** (`org/repo`): bright white (`chalk.whiteBright`)
 - **Shell commands**: bright white (`chalk.whiteBright`)
 - **Comments / annotations**: dim grey (`chalk.dim`)
 

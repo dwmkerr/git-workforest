@@ -134,7 +134,7 @@ program
           const { getRepoRoot } = await import("./git.js");
           const gitRoot = await getRepoRoot(process.cwd());
           const repoName = path.basename(gitRoot);
-          console.log(`in repo ${repoName}, not a forest yet. to migrate:\n`);
+          console.log(`in repo ${chalk.whiteBright(repoName)}, not a forest yet. to migrate:\n`);
           console.log(`  ${chalk.whiteBright("git forest migrate")}`);
         } else {
           console.log("not in a repo. to get started:\n");
@@ -224,9 +224,9 @@ program
           path.basename(forestRoot),
         );
         if (activeTree) {
-          console.log(`already a forest. on branch ${chalk.green(activeTree.branch)} in ${repoName}`);
+          console.log(`already a forest. on branch ${chalk.green(activeTree.branch)} in ${chalk.whiteBright(repoName)}`);
         } else {
-          console.log(`already a forest. in ${repoName}`);
+          console.log(`already a forest. in ${chalk.whiteBright(repoName)}`);
         }
         console.log();
         console.log("trees:");
@@ -289,9 +289,9 @@ program
       const activeTree = trees.find((t) => t.active);
       const repoName = await getRepoName(trees[0].path, path.basename(forestRoot));
       if (activeTree) {
-        console.log(`on branch ${chalk.green(activeTree.branch)} in ${repoName}`);
+        console.log(`on branch ${chalk.green(activeTree.branch)} in ${chalk.whiteBright(repoName)}`);
       } else {
-        console.log(`in ${repoName}`);
+        console.log(`in ${chalk.whiteBright(repoName)}`);
       }
       console.log();
       console.log("trees:");
@@ -309,7 +309,7 @@ program
           const { getRepoRoot } = await import("./git.js");
           const gitRoot = await getRepoRoot(process.cwd());
           const repoName = path.basename(gitRoot);
-          console.log(`in repo ${repoName}, not a forest yet. to migrate:\n`);
+          console.log(`in repo ${chalk.whiteBright(repoName)}, not a forest yet. to migrate:\n`);
           console.log(`  ${chalk.whiteBright("git forest migrate")}`);
         } else {
           console.log("not in a repo. to get started:\n");
