@@ -116,13 +116,16 @@ program
     try {
       const config = await loadConfig();
       const result = await checkoutCommand(branch, process.cwd(), config);
+      const rel = path.relative(process.cwd(), result.treePath);
       if (result.created) {
         console.log(`checked out ${chalk.green(result.branch)}.`);
-      } else {
+        printCdHint(rel);
+      } else if (rel) {
         console.log(`already checked out.`);
+        printCdHint(rel);
+      } else {
+        console.log(`already on ${chalk.green(result.branch)}.`);
       }
-      const rel = path.relative(process.cwd(), result.treePath);
-      printCdHint(rel);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes("not inside a workforest")) {
