@@ -28,3 +28,13 @@ cd <path>
 ```
 
 The comment line is dimmed (`chalk.dim`), the `cd` command is bright white (`chalk.whiteBright`). No blank line between the spinner output and the hint.
+
+## Shell recordings
+
+Use shellwright MCP for terminal screenshots and recordings. Set PS1 to a bold white `$ `:
+
+```bash
+export PS1='\[\e[1;37m\]$ \[\e[0m\]'
+```
+
+Save screenshots to `docs/screenshots/`.
