@@ -129,9 +129,17 @@ program
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes("not inside a workforest")) {
-        console.log("not a forest. to get started:\n");
-        console.log(`  ${chalk.whiteBright("git forest migrate")}`);
-        console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
+        const context = await detectContext(process.cwd());
+        if (context === "repo") {
+          const { getRepoRoot } = await import("./git.js");
+          const gitRoot = await getRepoRoot(process.cwd());
+          const repoName = path.basename(gitRoot);
+          console.log(`in repo ${repoName}, not a forest yet. to migrate:\n`);
+          console.log(`  ${chalk.whiteBright("git forest migrate")}`);
+        } else {
+          console.log("not in a repo. to get started:\n");
+          console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
+        }
       } else {
         error(message);
         process.exit(1);
@@ -296,9 +304,17 @@ program
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes("not inside a workforest")) {
-        console.log("not a forest. to get started:\n");
-        console.log(`  ${chalk.whiteBright("git forest migrate")}`);
-        console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
+        const context = await detectContext(process.cwd());
+        if (context === "repo") {
+          const { getRepoRoot } = await import("./git.js");
+          const gitRoot = await getRepoRoot(process.cwd());
+          const repoName = path.basename(gitRoot);
+          console.log(`in repo ${repoName}, not a forest yet. to migrate:\n`);
+          console.log(`  ${chalk.whiteBright("git forest migrate")}`);
+        } else {
+          console.log("not in a repo. to get started:\n");
+          console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
+        }
       } else {
         error(message);
         process.exit(1);
