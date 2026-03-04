@@ -27,7 +27,19 @@ export async function checkoutCommand(
     return { treePath: match.path, branch: match.branch, created: false };
   }
 
-  const gitRoot = await getRepoRoot(cwd);
+  // resolve git root from cwd if inside a tree, or fall back to an existing
+  // tree when running from the forest root (which is not a git repo itself)
+  let gitRoot: string;
+  try {
+    gitRoot = await getRepoRoot(cwd);
+  } catch {
+    if (trees.length === 0) {
+      throw new Error(
+        "no git trees found in forest.\ntry 'git forest clone <org/repo>' to add a repo",
+      );
+    }
+    gitRoot = await getRepoRoot(trees[0].path);
+  }
   const treePath = resolveTreePath(forestRoot, config.treeDir, branch);
 
   if (config.fatTrees) {
