@@ -72,6 +72,15 @@ export async function getRepoName(dir: string, fallback?: string): Promise<strin
   return fallback || dir.split("/").pop() || dir;
 }
 
+export async function listLocalBranches(repoDir: string): Promise<string[]> {
+  const { stdout } = await exec(
+    "git",
+    ["branch", "--format=%(refname:short)"],
+    { cwd: repoDir },
+  );
+  return stdout.trim().split("\n").filter(Boolean);
+}
+
 export async function getRepoRoot(dir: string): Promise<string> {
   const { stdout } = await exec(
     "git",

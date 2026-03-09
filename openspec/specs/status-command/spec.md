@@ -1,6 +1,33 @@
 ## Purpose
 
-Show trees in the current forest with active branch highlighting.
+Show trees in the current forest with active branch highlighting. Lists all worktrees with their branch names and relative paths. Marks the currently active tree with `*` when run from inside a branch folder.
+
+## CLI Output
+
+```
+$ git forest status
+on branch fix-typo in dwmkerr/effective-shell
+
+trees:
+  main  ./main
+* fix-typo  ./fix-typo
+```
+
+```
+$ git forest status
+in dwmkerr/effective-shell
+
+trees:
+  main  ./main
+  fix-typo  ./fix-typo
+```
+
+```
+$ git forest status
+in repo my-project, not a forest yet. to migrate:
+
+  git forest migrate
+```
 
 ## Requirements
 

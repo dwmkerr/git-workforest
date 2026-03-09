@@ -1,6 +1,29 @@
 ## Purpose
 
-Create a worktree or fat clone for a branch within an existing forest.
+Create a worktree or fat clone for a branch within an existing forest. Aliased as both `checkout` and `tree`. Finds an existing tree or creates a new one, then prints a cd hint to the branch folder.
+
+## CLI Output
+
+```
+$ git forest checkout fix-typo
+checked out fix-typo.
+
+# please change directory:
+cd fix-typo
+```
+
+```
+$ git forest checkout main
+already on main.
+```
+
+```
+$ git forest checkout feat/new-feature
+checked out feat/new-feature.
+
+# please change directory:
+cd ../feat/new-feature
+```
 
 ## Requirements
 
