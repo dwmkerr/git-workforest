@@ -143,13 +143,14 @@ program
       const context = await detectContext(process.cwd());
 
       if (context === "repo") {
-        const { getLocalBranch, getRepoRoot } = await import("./git.js");
+        const { getLocalBranch, getRepoRoot, listLocalBranches } = await import("./git.js");
         const gitRoot = await getRepoRoot(process.cwd());
         const branch = await getLocalBranch(gitRoot);
+        const branches = await listLocalBranches(gitRoot);
 
         const repoName = path.basename(gitRoot);
         console.log("\nexisting repo detected. migration preview:\n");
-        const preview = buildMigratePreview(repoName, branch);
+        const preview = buildMigratePreview(repoName, branch, branches);
         const dimmed = preview.replace(/#.*/g, (m) => chalk.dim(m));
         console.log(dimmed);
         console.log();
@@ -227,14 +228,15 @@ program
           console.log(`${prefix}${branch}  ${rel}`);
         }
       } else if (context === "repo") {
-        const { getLocalBranch, getRepoRoot } = await import("./git.js");
+        const { getLocalBranch, getRepoRoot, listLocalBranches } = await import("./git.js");
         const gitRoot = await getRepoRoot(process.cwd());
         const branch = await getLocalBranch(gitRoot);
+        const branches = await listLocalBranches(gitRoot);
         const config = await loadConfig();
 
         const repoName = path.basename(gitRoot);
         console.log("\nexisting repo detected. migration preview:\n");
-        const preview = buildMigratePreview(repoName, branch);
+        const preview = buildMigratePreview(repoName, branch, branches);
         const dimmed = preview.replace(/#.*/g, (m) => chalk.dim(m));
         console.log(dimmed);
         console.log();
