@@ -1,6 +1,24 @@
 ## Purpose
 
-Clone a GitHub repo into a structured forest path with interactive confirmation.
+Clone a GitHub repo into a structured forest path with interactive confirmation. Shows the proposed location and asks for confirmation before cloning. Creates the forest root, clones into a subfolder named after the default branch, and writes a `.workforest.yaml` marker.
+
+## CLI Output
+
+```
+$ git forest clone dwmkerr/effective-shell
+clone dwmkerr/effective-shell to ~/repos/github/dwmkerr/effective-shell? (Y/n)
+✔ cloned to ~/repos/github/dwmkerr/effective-shell/main
+```
+
+```
+$ git forest clone dwmkerr/effective-shell -y
+✔ cloned to ~/repos/github/dwmkerr/effective-shell/main
+```
+
+```
+$ git forest clone bad-format
+error: expected format: org/repo (e.g. dwmkerr/effective-shell)
+```
 
 ## Requirements
 

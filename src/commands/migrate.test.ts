@@ -41,26 +41,50 @@ describe("migrate command", () => {
   });
 
   describe("buildMigratePreview", () => {
-    it("shows before/after tree diagram with repo name and branch", () => {
-      const preview = buildMigratePreview("gdog", "main");
+    it("shows before/after tree with current branch label", () => {
+      const preview = buildMigratePreview("gdog", "main", ["main"]);
       expect(preview).toContain("# before");
       expect(preview).toContain("gdog/");
       expect(preview).toContain("# after");
       expect(preview).toContain(".workforest.yaml");
-      expect(preview).toContain("main/");
-      expect(preview).toContain("# main branch");
+      expect(preview).toContain("main/  # current branch");
     });
 
-    it("shows worktree placeholders", () => {
-      const preview = buildMigratePreview("gdog", "main");
+    it("shows placeholders when only one branch exists", () => {
+      const preview = buildMigratePreview("gdog", "main", ["main"]);
       expect(preview).toContain("<branch-1>/");
       expect(preview).toContain("<branch-2>/");
-      expect(preview).toContain("# worktree");
       expect(preview).toContain("# etc");
     });
 
+    it("shows real branches as worktrees", () => {
+      const preview = buildMigratePreview("ark", "feat/model-providers", [
+        "feat/model-providers",
+        "main",
+        "fix/bug-123",
+      ]);
+      expect(preview).toContain("feat/model-providers/  # current branch");
+      expect(preview).toContain("main/  # worktree");
+      expect(preview).toContain("fix/bug-123/  # worktree");
+      expect(preview).not.toContain("...");
+    });
+
+    it("shows ellipsis when more than 3 branches", () => {
+      const preview = buildMigratePreview("ark", "feat/x", [
+        "feat/x",
+        "main",
+        "fix/a",
+        "fix/b",
+      ]);
+      expect(preview).toContain("feat/x/  # current branch");
+      expect(preview).toContain("main/  # worktree");
+      expect(preview).toContain("fix/a/  # worktree");
+      expect(preview).not.toContain("fix/b/");
+      expect(preview).toContain("...");
+    });
+
     it("uses provided repo name and branch", () => {
-      const preview = buildMigratePreview("myproject", "develop");
+      const preview = buildMigratePreview("myproject", "develop", ["develop"]);
       expect(preview).toContain("myproject/");
       expect(preview).toContain("develop/");
     });
@@ -80,6 +104,24 @@ describe("migrate command", () => {
       const gitDir = path.join(result.treePath, ".git");
       const stat = await fs.stat(gitDir);
       expect(stat.isDirectory()).toBe(true);
+    });
+
+    it("handles branch names with slashes (e.g. feat/foo)", async () => {
+      const repoDir = path.join(tmpDir, "slashrepo");
+      execSync(`git init "${repoDir}"`, quiet);
+      execSync(
+        `cd "${repoDir}" && git config user.email "test@test.com" && git config user.name "Test" && git config commit.gpgsign false && touch README.md && git add . && git commit -m "init" && git checkout -b feat/my-feature`,
+        quiet,
+      );
+
+      const result = await migrateToForest(repoDir);
+      expect(result.branch).toBe("feat/my-feature");
+      const gitDir = path.join(result.treePath, ".git");
+      const stat = await fs.stat(gitDir);
+      expect(stat.isDirectory()).toBe(true);
+      const readme = path.join(result.treePath, "README.md");
+      const readmeStat = await fs.stat(readme);
+      expect(readmeStat.isFile()).toBe(true);
     });
 
     it("creates .workforest.yaml marker after migration", async () => {
