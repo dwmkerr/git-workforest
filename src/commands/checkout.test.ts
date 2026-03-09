@@ -55,6 +55,16 @@ describe("checkout command", () => {
     expect(stat.isDirectory()).toBe(true);
   });
 
+  it("creates a new tree when run from the forest root", async () => {
+    const config = { ...DEFAULT_CONFIG };
+    // repoRoot is the forest root (.workforest.yaml exists there but it's not a git repo)
+    const result = await checkoutCommand("fix-from-root", repoRoot, config);
+    expect(result.created).toBe(true);
+    expect(result.treePath).toBe(path.join(repoRoot, "fix-from-root"));
+    const stat = await fs.stat(result.treePath);
+    expect(stat.isDirectory()).toBe(true);
+  });
+
   it("throws when not inside a workforest", async () => {
     const randomDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-no-forest-"));
     const config = { ...DEFAULT_CONFIG };
