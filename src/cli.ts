@@ -113,23 +113,37 @@ program
   .alias("tree")
   .description("check out a branch (find or create its tree)")
   .action(async (branch: string) => {
-    const spinner = ora();
     try {
       const config = await loadConfig();
-      spinner.start(`checking out ${branch}...`);
       const result = await checkoutCommand(branch, process.cwd(), config);
-      if (result.created) {
-        spinner.succeed(`tree created at ${result.treePath}`);
-      } else {
-        spinner.stop();
-      }
       const rel = path.relative(process.cwd(), result.treePath);
-      printCdHint(rel);
+      if (result.created) {
+        console.log(`checked out ${chalk.green(result.branch)}.`);
+        printCdHint(rel);
+      } else if (rel) {
+        console.log(`already checked out.`);
+        printCdHint(rel);
+      } else {
+        console.log(`already on ${chalk.green(result.branch)}.`);
+      }
     } catch (err: unknown) {
-      spinner.stop();
       const message = err instanceof Error ? err.message : String(err);
-      error(message);
-      process.exit(1);
+      if (message.includes("not inside a workforest")) {
+        const context = await detectContext(process.cwd());
+        if (context === "repo") {
+          const { getRepoRoot } = await import("./git.js");
+          const gitRoot = await getRepoRoot(process.cwd());
+          const repoName = path.basename(gitRoot);
+          console.log(`in repo ${chalk.whiteBright(repoName)}, not a forest yet. to migrate:\n`);
+          console.log(`  ${chalk.whiteBright("git forest migrate")}`);
+        } else {
+          console.log("not in a repo. to get started:\n");
+          console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
+        }
+      } else {
+        error(message);
+        process.exit(1);
+      }
     }
   });
 
@@ -211,9 +225,9 @@ program
           path.basename(forestRoot),
         );
         if (activeTree) {
-          console.log(`already a forest. on branch ${chalk.green(activeTree.branch)} in ${repoName}`);
+          console.log(`already a forest. on branch ${chalk.green(activeTree.branch)} in ${chalk.whiteBright(repoName)}`);
         } else {
-          console.log(`already a forest. in ${repoName}`);
+          console.log(`already a forest. in ${chalk.whiteBright(repoName)}`);
         }
         console.log();
         console.log("trees:");
@@ -277,9 +291,9 @@ program
       const activeTree = trees.find((t) => t.active);
       const repoName = await getRepoName(trees[0].path, path.basename(forestRoot));
       if (activeTree) {
-        console.log(`on branch ${chalk.green(activeTree.branch)} in ${repoName}`);
+        console.log(`on branch ${chalk.green(activeTree.branch)} in ${chalk.whiteBright(repoName)}`);
       } else {
-        console.log(`in ${repoName}`);
+        console.log(`in ${chalk.whiteBright(repoName)}`);
       }
       console.log();
       console.log("trees:");
@@ -291,8 +305,22 @@ program
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      error(message);
-      process.exit(1);
+      if (message.includes("not inside a workforest")) {
+        const context = await detectContext(process.cwd());
+        if (context === "repo") {
+          const { getRepoRoot } = await import("./git.js");
+          const gitRoot = await getRepoRoot(process.cwd());
+          const repoName = path.basename(gitRoot);
+          console.log(`in repo ${chalk.whiteBright(repoName)}, not a forest yet. to migrate:\n`);
+          console.log(`  ${chalk.whiteBright("git forest migrate")}`);
+        } else {
+          console.log("not in a repo. to get started:\n");
+          console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
+        }
+      } else {
+        error(message);
+        process.exit(1);
+      }
     }
   });
 

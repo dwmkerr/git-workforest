@@ -8,13 +8,15 @@
 
 - All output is **lowercase** (e.g. `cloning...`, `cloned to`, `aborted.`)
 - Errors use `error:` in red (via chalk) — no emoji prefixes
-- Use ora spinners for progress, `spinner.succeed()` for completion
+- Use ora spinners only for long operations (clone). Fast operations (migrate, checkout) use plain messages
 - Confirmation prompts are inline questions (e.g. `clone org/repo to /path? (Y/n)`)
+- Mirror git's output style where possible to reduce cognitive dissonance (e.g. `already on <branch>.` like `git checkout`)
 
 ## Terminal colour conventions
 
 - **Branch names**: green (`chalk.green`)
 - **Folder/path names**: blue (`chalk.blue`)
+- **Repo names** (`org/repo`): bright white (`chalk.whiteBright`)
 - **Shell commands**: bright white (`chalk.whiteBright`)
 - **Comments / annotations**: dim grey (`chalk.dim`)
 

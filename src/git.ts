@@ -1,7 +1,20 @@
-import { execFile } from "child_process";
+import { execFile, spawn } from "child_process";
 import { promisify } from "util";
 
 const exec = promisify(execFile);
+
+function run(
+  cmd: string,
+  args: string[],
+  opts: { cwd?: string } = {},
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, { ...opts, stdio: "inherit" });
+    child.on("close", (code) =>
+      code === 0 ? resolve() : reject(new Error(`${cmd} ${args.join(" ")} exited with ${code}`)),
+    );
+  });
+}
 
 export async function gitClone(
   repoUrl: string,
@@ -31,7 +44,7 @@ export async function gitWorktreeAdd(
   treePath: string,
   branch: string,
 ): Promise<void> {
-  await exec("git", ["worktree", "add", "-b", branch, treePath, "HEAD"], {
+  await run("git", ["worktree", "add", "-b", branch, treePath, "HEAD"], {
     cwd: repoDir,
   });
 }

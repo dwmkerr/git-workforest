@@ -73,6 +73,20 @@ describe("status command", () => {
     });
   });
 
+  it("finds nested trees like feat/branch-name", async () => {
+    const featDir = path.join(repoRoot, "feat");
+    await fs.mkdir(featDir, { recursive: true });
+    execSync(
+      `cd "${path.join(repoRoot, "main")}" && git worktree add -b feat/new-thing "${path.join(featDir, "new-thing")}" HEAD`,
+      quiet,
+    );
+    const { trees } = await statusTrees(path.join(repoRoot, "main"));
+    const nested = trees.find((t) => t.name === "feat/new-thing");
+    expect(nested).toBeDefined();
+    expect(nested?.branch).toBe("feat/new-thing");
+    expect(nested?.path).toBe(path.join(featDir, "new-thing"));
+  });
+
   it("throws with clone/migrate hint when outside a forest", async () => {
     const outside = await fs.mkdtemp(path.join(os.tmpdir(), "wf-no-forest-"));
     try {
