@@ -1,6 +1,50 @@
 ## Purpose
 
-Migrate an existing repo to forest layout, or clone a new one interactively.
+Migrate an existing repo to forest layout, or clone a new one interactively. Shows a before/after preview of the directory structure, lists real local branches, and asks for confirmation before moving files.
+
+## CLI Output
+
+```
+$ git forest migrate
+
+existing repo detected. migration preview:
+
+  # before
+  my-project/
+
+  # after
+  my-project/
+    .workforest.yaml       # preferences
+    main/                  # current branch
+    <branch-1>/            # worktree
+    <branch-2>/            # etc
+
+no files will be changed, folder rename only.
+migrate to forest layout? (y/N)
+```
+
+```
+$ git forest migrate
+
+existing repo detected. migration preview:
+
+  # before
+  ark/
+
+  # after
+  ark/
+    .workforest.yaml       # preferences
+    feat/model-providers/  # current branch
+    main/                  # worktree
+    fix/bug-123/           # worktree
+
+no files will be changed, folder rename only.
+migrate to forest layout? (y/N) y
+migrated to forest layout.
+
+# please change directory:
+cd feat/model-providers
+```
 
 ## Requirements
 
