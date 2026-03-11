@@ -109,13 +109,14 @@ program
   });
 
 program
-  .command("checkout <branch>")
+  .command("checkout <branch> [gitArgs...]")
   .alias("tree")
   .description("check out a branch (find or create its tree)")
-  .action(async (branch: string) => {
+  .allowUnknownOption()
+  .action(async (branch: string, gitArgs: string[]) => {
     try {
       const config = await loadConfig();
-      const result = await checkoutCommand(branch, process.cwd(), config);
+      const result = await checkoutCommand(branch, process.cwd(), config, gitArgs);
       const rel = path.relative(process.cwd(), result.treePath);
       if (result.created) {
         console.log(`checked out ${chalk.green(result.branch)}.`);
