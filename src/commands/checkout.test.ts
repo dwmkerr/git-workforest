@@ -10,6 +10,8 @@ describe("checkout command", () => {
   let tmpDir: string;
   let repoRoot: string;
   let mainDir: string;
+  let bareRepo: string;
+  let seedDir: string;
 
   const quiet = { stdio: "pipe" as const };
 
@@ -17,9 +19,9 @@ describe("checkout command", () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-checkout-test-"));
     repoRoot = path.join(tmpDir, "myrepo");
     mainDir = path.join(repoRoot, "main");
-    const bareRepo = path.join(tmpDir, "bare.git");
+    bareRepo = path.join(tmpDir, "bare.git");
     execSync(`git init --bare "${bareRepo}"`, quiet);
-    const seedDir = path.join(tmpDir, "seed");
+    seedDir = path.join(tmpDir, "seed");
     execSync(`git clone "${bareRepo}" "${seedDir}"`, quiet);
     execSync(
       `cd "${seedDir}" && git config user.email "test@test.com" && git config user.name "Test" && git config commit.gpgsign false && touch README.md && git add . && git commit -m "init" && git push`,
@@ -63,6 +65,24 @@ describe("checkout command", () => {
     expect(result.treePath).toBe(path.join(repoRoot, "fix-from-root"));
     const stat = await fs.stat(result.treePath);
     expect(stat.isDirectory()).toBe(true);
+  });
+
+  it("checks out an existing remote branch instead of creating a new one", async () => {
+    // Push a branch to the remote via the seed repo
+    execSync(
+      `cd "${seedDir}" && git checkout -b fix/remote-branch && touch remote.txt && git add . && git commit -m "remote commit" && git push -u origin fix/remote-branch`,
+      quiet,
+    );
+    // Fetch in mainDir so it knows about the remote branch
+    execSync(`git fetch`, { cwd: mainDir, ...quiet });
+
+    const config = { ...DEFAULT_CONFIG };
+    const result = await checkoutCommand("fix/remote-branch", mainDir, config);
+    expect(result.created).toBe(true);
+    expect(result.treePath).toBe(path.join(repoRoot, "fix/remote-branch"));
+    // The worktree should have the file from the remote branch
+    const stat = await fs.stat(path.join(result.treePath, "remote.txt"));
+    expect(stat.isFile()).toBe(true);
   });
 
   it("throws when not inside a workforest", async () => {

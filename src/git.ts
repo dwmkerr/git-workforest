@@ -6,10 +6,11 @@ const exec = promisify(execFile);
 function run(
   cmd: string,
   args: string[],
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; quiet?: boolean } = {},
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { ...opts, stdio: "inherit" });
+    const { quiet, ...spawnOpts } = opts;
+    const child = spawn(cmd, args, { ...spawnOpts, stdio: quiet ? "pipe" : "inherit" });
     child.on("close", (code) =>
       code === 0 ? resolve() : reject(new Error(`${cmd} ${args.join(" ")} exited with ${code}`)),
     );
@@ -43,10 +44,19 @@ export async function gitWorktreeAdd(
   repoDir: string,
   treePath: string,
   branch: string,
+  extraArgs: string[] = [],
 ): Promise<void> {
-  await run("git", ["worktree", "add", "-b", branch, treePath, "HEAD"], {
-    cwd: repoDir,
-  });
+  try {
+    // Check out existing branch (local or remote tracking)
+    await run("git", ["worktree", "add", treePath, branch, ...extraArgs], {
+      cwd: repoDir, quiet: true,
+    });
+  } catch {
+    // Branch doesn't exist — create it
+    await run("git", ["worktree", "add", "-b", branch, treePath, ...extraArgs], {
+      cwd: repoDir,
+    });
+  }
 }
 
 export async function gitFatClone(
@@ -59,7 +69,13 @@ export async function gitFatClone(
   });
   const originUrl = stdout.trim();
   await exec("git", ["clone", originUrl, targetDir]);
-  await exec("git", ["checkout", "-b", branch], { cwd: targetDir });
+  try {
+    // Check out existing branch (local or remote tracking)
+    await exec("git", ["checkout", branch], { cwd: targetDir });
+  } catch {
+    // Branch doesn't exist — create it
+    await exec("git", ["checkout", "-b", branch], { cwd: targetDir });
+  }
 }
 
 export async function isInsideWorktree(dir: string): Promise<boolean> {

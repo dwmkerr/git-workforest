@@ -13,6 +13,7 @@ export async function checkoutCommand(
   branch: string,
   cwd: string,
   config: WorkforestConfig,
+  extraArgs: string[] = [],
 ): Promise<CheckoutResult> {
   const forestRoot = await findForestRoot(cwd);
   if (!forestRoot) {
@@ -45,7 +46,7 @@ export async function checkoutCommand(
   if (config.fatTrees) {
     await gitFatClone(gitRoot, treePath, branch);
   } else {
-    await gitWorktreeAdd(gitRoot, treePath, branch);
+    await gitWorktreeAdd(gitRoot, treePath, branch, extraArgs);
   }
 
   return { treePath, branch, created: true };
