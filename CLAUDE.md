@@ -8,8 +8,8 @@
 
 workforest mirrors git's UX wherever possible — commands, flags, and output should feel familiar to git users:
 
-- **Commands map to git equivalents**: `git forest -l` mirrors `git branch -l`, `git forest status` mirrors `git status`, `git forest checkout` mirrors `git checkout`
-- **Flags follow git conventions**: prefer `-l` over `--list`, `-b` over `--branch`, etc.
+- **Commands map to git equivalents**: `git forest status` mirrors `git status`/`git branch -l`, `git forest checkout` mirrors `git checkout`
+- **Flags follow git conventions**: prefer short flags (`-b` over `--branch`, etc.)
 - **Output matches git formatting**: `*` for active branch, `+` for worktree branches (matching `git branch -l`), `already on <branch>.` (matching `git checkout`)
 - When adding new commands or flags, check if git has an equivalent and match it
 

@@ -327,10 +327,4 @@ program
   .description("Show trees and current branch for the forest")
   .action(runStatus);
 
-program.option("-l, --list", "List trees (alias for status)");
-
 program.parse();
-
-if (program.opts().list) {
-  runStatus();
-}

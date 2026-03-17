@@ -1,8 +1,8 @@
 # Status: Sort and Worktree Indicators
 
-**Goal:** Make `git forest status` output match `git branch -l` conventions — show `+` prefix for worktree branches, `*` for the active branch, sort alphabetically with default branch first. Add `git forest -l` as an alias for `git forest status`.
+**Goal:** Make `git forest status` output match `git branch -l` conventions — show `+` prefix for worktree branches, `*` for the active branch, sort alphabetically with default branch first.
 
-**Motivation:** The new screenshot (git-forest-status.png) looks great but the tree list is unsorted and doesn't indicate which entries are worktrees vs the current branch — `git branch -l` uses `+` for worktree branches and `*` for the current branch, and we should match that. `git forest -l` is the natural equivalent of `git branch -l`.
+**Motivation:** The new screenshot (git-forest-status.png) looks great but the tree list is unsorted and doesn't indicate which entries are worktrees vs the current branch — `git branch -l` uses `+` for worktree branches and `*` for the current branch, and we should match that.
 
 ---
 
@@ -103,19 +103,6 @@ Use `git symbolic-ref refs/remotes/origin/HEAD` from any tree's working director
 - Other (not active): `"+ "`
 
 ### 2. `src/cli.ts`
-
-**Add `-l` / `--list` option** to the top-level program (or as an alias). `git forest -l` runs the same logic as `git forest status`.
-
-```
-$ git forest -l
-on branch fix/typo in my-project
-
-trees:
-  main            ./main
-+ docs/readme     ./docs/readme
-+ feat/dark-mode  ./feat/dark-mode
-* fix/typo        ./fix/typo
-```
 
 **Update prefix in render loop:** The inline prefix logic should become three-way to match `formatTreeLine`:
 - `tree.active ? "* " : tree.isDefault ? "  " : "+ "`
