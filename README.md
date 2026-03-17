@@ -2,6 +2,10 @@
   <h2 align="center"><code>🌲 git-workforest</code></h2>
   <h3 align="center">Git worktrees organised into a simple and predictable folder structure.<br/>Use <code>git forest</code> commands to quickly clone, checkout and switch between branches.</h3>
   <p align="center">
+    <a href="https://www.npmjs.com/package/workforest"><img src="https://img.shields.io/npm/v/workforest" alt="npm" /></a>
+    <a href="https://codecov.io/gh/dwmkerr/git-workforest"><img src="https://codecov.io/gh/dwmkerr/git-workforest/branch/main/graph/badge.svg" alt="codecov" /></a>
+  </p>
+  <p align="center">
     <a href="#quickstart">Quickstart</a> |
     <a href="#commands">Commands</a> |
     <a href="#configuration">Configuration</a>
