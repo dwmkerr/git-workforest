@@ -236,8 +236,8 @@ program
           const prefix = tree.active ? "* " : tree.isDefault ? "  " : "+ ";
           const branch = tree.active
             ? chalk.green(tree.branch)
-            : tree.branch;
-          const rel = chalk.blue(
+            : tree.isDefault ? tree.branch : chalk.cyan(tree.branch);
+          const rel = chalk.whiteBright(
             "./" + path.relative(forestRoot, tree.path),
           );
           console.log(`${prefix}${branch}  ${rel}`);
@@ -297,8 +297,10 @@ async function runStatus(): Promise<void> {
     console.log("trees:");
     for (const tree of trees) {
       const prefix = tree.active ? "* " : tree.isDefault ? "  " : "+ ";
-      const branch = tree.active ? chalk.green(tree.branch) : tree.branch;
-      const rel = chalk.blue("./" + path.relative(forestRoot, tree.path));
+      const branch = tree.active
+        ? chalk.green(tree.branch)
+        : tree.isDefault ? tree.branch : chalk.cyan(tree.branch);
+      const rel = chalk.whiteBright("./" + path.relative(forestRoot, tree.path));
       console.log(`${prefix}${branch}  ${rel}`);
     }
   } catch (err: unknown) {

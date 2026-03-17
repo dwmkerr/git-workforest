@@ -68,9 +68,11 @@ trees:
 
 | Prefix | Meaning | Colour |
 |--------|---------|--------|
-| `*` | Active tree (cwd is inside this worktree) | green (existing) |
-| `+` | Worktree branch (not active) | unchanged (default) |
-| ` ` | Default branch when not active (no `+` — it's the primary copy, not a linked worktree) | — |
+| `*` | Active tree (cwd is inside this worktree) | green (`chalk.green`) — matches git |
+| `+` | Worktree branch (not active) | cyan (`chalk.cyan`) — matches git |
+| ` ` | Default branch when not active (no `+` — it's the primary copy, not a linked worktree) | no colour — matches git |
+
+Directories (paths) are bright white (`chalk.whiteBright`), always `./` prefixed.
 
 The default branch gets a blank prefix when not active because it's the primary clone, not a linked worktree. Every other non-active tree gets `+` because they are worktrees linked from the primary clone. This matches `git branch -l` where the main checkout has no marker and linked worktree branches show `+`.
 

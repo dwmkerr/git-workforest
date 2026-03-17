@@ -23,11 +23,16 @@ workforest mirrors git's UX wherever possible — commands, flags, and output sh
 
 ## Terminal colour conventions
 
-- **Branch names**: green (`chalk.green`)
-- **Folder/path names**: blue (`chalk.blue`)
+Colours match `git branch -l` where possible:
+
+- **Active branch** (`*`): green (`chalk.green`) — matches git's current branch colour
+- **Worktree branch** (`+`): cyan (`chalk.cyan`) — matches git's linked worktree colour
+- **Default branch** (no prefix): no colour — matches git's regular branch colour
+- **Directories/paths** (always `./` prefixed): bright white (`chalk.whiteBright`)
 - **Repo names** (`org/repo`): bright white (`chalk.whiteBright`)
 - **Shell commands**: bright white (`chalk.whiteBright`)
 - **Comments / annotations**: dim grey (`chalk.dim`)
+- **Errors**: red (`chalk.red`)
 
 ## cd hint pattern
 
