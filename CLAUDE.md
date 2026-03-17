@@ -47,12 +47,12 @@ The comment line is dimmed (`chalk.dim`), the `cd` command is bright white (`cha
 
 ## Terminal screenshots
 
-Use the shellwright MCP server to capture terminal screenshots for docs:
+Use the shellwright MCP server to capture screenshots for `docs/screenshots/`:
 
-1. Start a shell session with `mcp__shellwright__shell_start` (use `nab` theme for dark warm tones)
-2. `cd` to the target forest and run the command
-3. Take a screenshot with `mcp__shellwright__shell_screenshot` using `border: { style: "macos", title: "Terminal" }`
-4. `curl -o docs/screenshots/<name>.png <download_url>` to save the file
-5. Stop the session with `mcp__shellwright__shell_stop`
+1. `shell_start` — command: `bash`, args: `["--login", "-i"]`, theme: `nab`, cols: `100`, rows: `22` (adjust to fit content without wrapping)
+2. `cd` to the target forest, `clear`, then run the command
+3. `shell_screenshot` — border: `{ style: "macos", title: "Terminal" }`
+4. `curl -o docs/screenshots/<name>.png <download_url>`
+5. `shell_stop`
 
-For SVG output, save as `.svg` instead. Screenshots go in `docs/screenshots/`.
+Use bash (not zsh) — the dwmkerr prompt renders correctly in bash via shellwright. Verify no line wrapping before taking the screenshot.
