@@ -233,7 +233,7 @@ program
         console.log();
         console.log("trees:");
         for (const tree of trees) {
-          const prefix = tree.active ? "* " : "  ";
+          const prefix = tree.active ? "* " : tree.isDefault ? "  " : "+ ";
           const branch = tree.active
             ? chalk.green(tree.branch)
             : tree.branch;
@@ -278,51 +278,59 @@ program
     }
   });
 
+async function runStatus(): Promise<void> {
+  try {
+    const { forestRoot, trees } = await statusTrees(process.cwd());
+    if (trees.length === 0) {
+      console.log("no trees found.");
+      return;
+    }
+
+    const activeTree = trees.find((t) => t.active);
+    const repoName = await getRepoName(trees[0].path, path.basename(forestRoot));
+    if (activeTree) {
+      console.log(`on branch ${chalk.green(activeTree.branch)} in ${chalk.whiteBright(repoName)}`);
+    } else {
+      console.log(`in ${chalk.whiteBright(repoName)}`);
+    }
+    console.log();
+    console.log("trees:");
+    for (const tree of trees) {
+      const prefix = tree.active ? "* " : tree.isDefault ? "  " : "+ ";
+      const branch = tree.active ? chalk.green(tree.branch) : tree.branch;
+      const rel = chalk.blue("./" + path.relative(forestRoot, tree.path));
+      console.log(`${prefix}${branch}  ${rel}`);
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes("not inside a workforest")) {
+      const context = await detectContext(process.cwd());
+      if (context === "repo") {
+        const { getRepoRoot } = await import("./git.js");
+        const gitRoot = await getRepoRoot(process.cwd());
+        const repoName = path.basename(gitRoot);
+        console.log(`in repo ${chalk.whiteBright(repoName)}, not a forest yet. to migrate:\n`);
+        console.log(`  ${chalk.whiteBright("git forest migrate")}`);
+      } else {
+        console.log("not in a repo. to get started:\n");
+        console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
+      }
+    } else {
+      error(message);
+      process.exit(1);
+    }
+  }
+}
+
 program
   .command("status")
   .description("Show trees and current branch for the forest")
-  .action(async () => {
-    try {
-      const { forestRoot, trees } = await statusTrees(process.cwd());
-      if (trees.length === 0) {
-        console.log("no trees found.");
-        return;
-      }
+  .action(runStatus);
 
-      const activeTree = trees.find((t) => t.active);
-      const repoName = await getRepoName(trees[0].path, path.basename(forestRoot));
-      if (activeTree) {
-        console.log(`on branch ${chalk.green(activeTree.branch)} in ${chalk.whiteBright(repoName)}`);
-      } else {
-        console.log(`in ${chalk.whiteBright(repoName)}`);
-      }
-      console.log();
-      console.log("trees:");
-      for (const tree of trees) {
-        const prefix = tree.active ? "* " : "  ";
-        const branch = tree.active ? chalk.green(tree.branch) : tree.branch;
-        const rel = chalk.blue("./" + path.relative(forestRoot, tree.path));
-        console.log(`${prefix}${branch}  ${rel}`);
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (message.includes("not inside a workforest")) {
-        const context = await detectContext(process.cwd());
-        if (context === "repo") {
-          const { getRepoRoot } = await import("./git.js");
-          const gitRoot = await getRepoRoot(process.cwd());
-          const repoName = path.basename(gitRoot);
-          console.log(`in repo ${chalk.whiteBright(repoName)}, not a forest yet. to migrate:\n`);
-          console.log(`  ${chalk.whiteBright("git forest migrate")}`);
-        } else {
-          console.log("not in a repo. to get started:\n");
-          console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
-        }
-      } else {
-        error(message);
-        process.exit(1);
-      }
-    }
-  });
+program.option("-l, --list", "List trees (alias for status)");
 
 program.parse();
+
+if (program.opts().list) {
+  runStatus();
+}
