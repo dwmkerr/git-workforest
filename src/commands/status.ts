@@ -49,6 +49,7 @@ async function findTrees(
           path: entryPath,
           branch,
           active,
+          isDefault: false,
         });
         continue;
       }
