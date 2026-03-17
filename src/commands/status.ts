@@ -11,10 +11,12 @@ export interface TreeEntry {
   path: string;
   branch: string;
   active: boolean;
+  isDefault: boolean;
 }
 
 export interface ForestStatus {
   forestRoot: string;
+  defaultBranch: string | null;
   trees: TreeEntry[];
 }
 
@@ -47,6 +49,7 @@ async function findTrees(
           path: entryPath,
           branch,
           active,
+          isDefault: false,
         });
         continue;
       }
@@ -61,6 +64,30 @@ async function findTrees(
   return trees;
 }
 
+export async function getDefaultBranch(gitDir: string): Promise<string | null> {
+  try {
+    const { stdout } = await exec(
+      "git",
+      ["symbolic-ref", "refs/remotes/origin/HEAD"],
+      { cwd: gitDir },
+    );
+    const ref = stdout.trim();
+    return ref.split("/").pop() || null;
+  } catch {
+    return null;
+  }
+}
+
+function sortTrees(trees: TreeEntry[], defaultBranch: string | null): TreeEntry[] {
+  return [...trees].sort((a, b) => {
+    if (defaultBranch) {
+      if (a.branch === defaultBranch) return -1;
+      if (b.branch === defaultBranch) return 1;
+    }
+    return a.branch.localeCompare(b.branch);
+  });
+}
+
 export async function statusTrees(cwd: string): Promise<ForestStatus> {
   const forestRoot = await findForestRoot(cwd);
   if (!forestRoot) {
@@ -72,11 +99,25 @@ export async function statusTrees(cwd: string): Promise<ForestStatus> {
   const resolvedCwd = path.resolve(cwd);
   const trees = await findTrees(forestRoot, forestRoot, resolvedCwd);
 
-  return { forestRoot, trees };
+  // Detect default branch: git symbolic-ref, then fallback to main/master
+  const firstTree = trees[0];
+  let defaultBranch = firstTree ? await getDefaultBranch(firstTree.path) : null;
+  if (!defaultBranch) {
+    if (trees.some((t) => t.branch === "main")) defaultBranch = "main";
+    else if (trees.some((t) => t.branch === "master")) defaultBranch = "master";
+  }
+
+  for (const tree of trees) {
+    tree.isDefault = tree.branch === defaultBranch;
+  }
+
+  const sorted = sortTrees(trees, defaultBranch);
+
+  return { forestRoot, defaultBranch, trees: sorted };
 }
 
 export function formatTreeLine(tree: TreeEntry, forestRoot: string): string {
-  const prefix = tree.active ? "* " : "  ";
+  const prefix = tree.active ? "* " : tree.isDefault ? "  " : "+ ";
   const rel = "./" + path.relative(forestRoot, tree.path);
   return `${prefix}${tree.branch}  ${rel}`;
 }

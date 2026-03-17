@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
 import { execSync } from "child_process";
-import { statusTrees, formatTreeLine } from "./status.js";
+import { statusTrees, formatTreeLine, getDefaultBranch } from "./status.js";
 
 describe("status command", () => {
   const quiet = { stdio: "pipe" as const };
@@ -14,7 +14,7 @@ describe("status command", () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-status-test-"));
     repoRoot = path.join(tmpDir, "myrepo");
     const bareRepo = path.join(tmpDir, "bare.git");
-    execSync(`git init --bare "${bareRepo}"`, quiet);
+    execSync(`git init --bare --initial-branch=main "${bareRepo}"`, quiet);
     const seedDir = path.join(tmpDir, "seed");
     execSync(`git clone "${bareRepo}" "${seedDir}"`, quiet);
     execSync(
@@ -60,16 +60,22 @@ describe("status command", () => {
   });
 
   describe("formatTreeLine", () => {
-    it("shows branch and relative path", () => {
-      const tree = { name: "sharpgl", branch: "main", path: "/forest/sharpgl", active: true };
+    it("shows * prefix for active tree", () => {
+      const tree = { name: "sharpgl", branch: "main", path: "/forest/sharpgl", active: true, isDefault: true };
       const line = formatTreeLine(tree, "/forest");
       expect(line).toBe("* main  ./sharpgl");
     });
 
-    it("indents inactive trees", () => {
-      const tree = { name: "fix-typo", branch: "fix-typo", path: "/forest/fix-typo", active: false };
+    it("shows + prefix for inactive non-default tree", () => {
+      const tree = { name: "fix-typo", branch: "fix-typo", path: "/forest/fix-typo", active: false, isDefault: false };
       const line = formatTreeLine(tree, "/forest");
-      expect(line).toBe("  fix-typo  ./fix-typo");
+      expect(line).toBe("+ fix-typo  ./fix-typo");
+    });
+
+    it("shows blank prefix for inactive default tree", () => {
+      const tree = { name: "main", branch: "main", path: "/forest/main", active: false, isDefault: true };
+      const line = formatTreeLine(tree, "/forest");
+      expect(line).toBe("  main  ./main");
     });
   });
 
@@ -85,6 +91,39 @@ describe("status command", () => {
     expect(nested).toBeDefined();
     expect(nested?.branch).toBe("feat/new-thing");
     expect(nested?.path).toBe(path.join(featDir, "new-thing"));
+  });
+
+  it("sorts trees with default branch first then alphabetically", async () => {
+    const featDir = path.join(repoRoot, "feat");
+    const docsDir = path.join(repoRoot, "docs");
+    await fs.mkdir(featDir, { recursive: true });
+    await fs.mkdir(docsDir, { recursive: true });
+    execSync(
+      `cd "${path.join(repoRoot, "main")}" && git worktree add -b feat/a "${path.join(featDir, "a")}" HEAD`,
+      quiet,
+    );
+    execSync(
+      `cd "${path.join(repoRoot, "main")}" && git worktree add -b docs/b "${path.join(docsDir, "b")}" HEAD`,
+      quiet,
+    );
+    const { trees } = await statusTrees(path.join(repoRoot, "main"));
+    const branches = trees.map((t) => t.branch);
+    expect(branches[0]).toBe("main");
+    expect(branches.slice(1)).toEqual([...branches.slice(1)].sort());
+  });
+
+  it("marks the default branch with isDefault", async () => {
+    const { trees } = await statusTrees(path.join(repoRoot, "main"));
+    const mainTree = trees.find((t) => t.branch === "main");
+    const fixTree = trees.find((t) => t.branch === "fix-typo");
+    expect(mainTree?.isDefault).toBe(true);
+    expect(fixTree?.isDefault).toBe(false);
+  });
+
+  it("detects default branch via git symbolic-ref", async () => {
+    const mainDir = path.join(repoRoot, "main");
+    const branch = await getDefaultBranch(mainDir);
+    expect(branch).toBe("main");
   });
 
   it("throws with clone/migrate hint when outside a forest", async () => {
