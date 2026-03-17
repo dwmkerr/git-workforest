@@ -1,8 +1,4 @@
-## Purpose
-
-Show trees in the current forest with active branch highlighting, worktree indicators, and sorted output matching `git branch -l` conventions.
-
-## CLI Output
+## MODIFIED CLI Output
 
 ```
 $ git forest status
@@ -37,29 +33,7 @@ trees:
 + fix/typo        ./fix/typo
 ```
 
-```
-$ git forest status
-in repo my-project, not a forest yet. to migrate:
-
-  git forest migrate
-```
-
-## Requirements
-
-### Requirement: status lists trees in the forest
-The CLI SHALL list all git-containing subdirectories in the forest root, showing name, branch, and path.
-
-#### Scenario: forest with multiple trees
-- **WHEN** user runs `git forest status` from inside a forest with trees
-- **THEN** the CLI SHALL display each tree's branch and `./`-prefixed relative path
-
-#### Scenario: empty forest
-- **WHEN** user runs `git forest status` in a forest with no trees
-- **THEN** the CLI SHALL print "no trees found."
-
-#### Scenario: not inside a forest
-- **WHEN** user runs `git forest status` outside any forest
-- **THEN** the CLI SHALL print guidance text with example commands
+## NEW Requirements
 
 ### Requirement: status uses git branch -l prefix conventions
 The CLI SHALL use `*` for the active tree, `+` for worktree branches, and blank for the default branch when not active — matching `git branch -l`.
@@ -93,21 +67,3 @@ The CLI SHALL sort trees with the default branch first, then remaining trees alp
 #### Scenario: sort order
 - **WHEN** the forest has trees `feat/a`, `main`, `docs/b`
 - **THEN** status SHALL list them as `main`, `docs/b`, `feat/a`
-
-### Requirement: status scans for trees recursively
-The CLI SHALL scan subdirectories recursively to find all git repos in the forest, not just immediate children.
-
-#### Scenario: nested tree directory
-- **WHEN** a tree exists at `feat/masterpiece/` inside the forest root
-- **THEN** `statusTrees` SHALL find it with name `feat/masterpiece`, branch from git, and correct path
-
-### Requirement: status highlights the active branch
-The CLI SHALL mark the tree the user is currently inside with a `*` prefix and green highlighting.
-
-#### Scenario: run from inside a tree
-- **WHEN** user runs `git forest status` from inside a tree directory
-- **THEN** that tree SHALL be marked with `*` prefix
-
-#### Scenario: run from forest root
-- **WHEN** user runs `git forest status` from the forest root (not inside any tree)
-- **THEN** no tree SHALL be marked as active
