@@ -1,6 +1,6 @@
 {
   "name": "workforest",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Managed worktrees with structure. Clone once, branch into folders.",
   "type": "module",
   "bin": {
