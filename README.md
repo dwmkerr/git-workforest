@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/hero.png" width="600" alt="git forest status" />
+  <img src="docs/screenshots/status.png" width="600" alt="git forest status" />
 </p>
 
 ## Quickstart
