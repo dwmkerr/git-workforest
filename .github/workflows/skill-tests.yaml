@@ -15,7 +15,7 @@ jobs:
 
       - uses: dwmkerr/skill-test-action@main
         with:
-          test_file: 'skills/**/skill-tests.yaml'
+          test_file: 'plugins/**/skill-tests.yaml'
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           marketplaces: ${{ github.workspace }}
           plugins: git-workforest@git-workforest

@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "git-workforest",
-      "source": ".",
+      "source": "./plugins/git-workforest",
       "description": "Teaches Claude Code how to work with git-workforest managed repositories",
       "version": "0.1.0"
     }
