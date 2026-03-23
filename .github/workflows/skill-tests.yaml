@@ -20,3 +20,4 @@ jobs:
           marketplaces: dwmkerr/git-workforest
           plugins: git-workforest@git-workforest
           timeout: '120'
+          max_turns: '1'

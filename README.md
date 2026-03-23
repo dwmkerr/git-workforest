@@ -4,6 +4,7 @@
   <p align="center">
     <a href="https://www.npmjs.com/package/workforest"><img src="https://img.shields.io/npm/v/workforest" alt="npm" /></a>
     <a href="https://codecov.io/gh/dwmkerr/git-workforest"><img src="https://codecov.io/gh/dwmkerr/git-workforest/branch/main/graph/badge.svg" alt="codecov" /></a>
+    <a href="https://github.com/dwmkerr/git-workforest/actions/workflows/skill-tests.yaml"><img src="https://github.com/dwmkerr/git-workforest/actions/workflows/skill-tests.yaml/badge.svg" alt="skill tests" /></a>
   </p>
   <p align="center">
     <a href="#quickstart">Quickstart</a> |
