@@ -4,6 +4,7 @@
   <p align="center">
     <a href="https://www.npmjs.com/package/workforest"><img src="https://img.shields.io/npm/v/workforest" alt="npm" /></a>
     <a href="https://codecov.io/gh/dwmkerr/git-workforest"><img src="https://codecov.io/gh/dwmkerr/git-workforest/branch/main/graph/badge.svg" alt="codecov" /></a>
+    <a href="https://github.com/dwmkerr/git-workforest/actions/workflows/skill-tests.yaml"><img src="https://github.com/dwmkerr/git-workforest/actions/workflows/skill-tests.yaml/badge.svg" alt="skill tests" /></a>
   </p>
   <p align="center">
     <a href="#quickstart">Quickstart</a> |
@@ -106,6 +107,16 @@ fatTrees: false
 | `fatTrees` | `false` | Use full clones instead of git worktrees (see below) |
 
 <sup>1</sup> **Fat trees**: With worktrees, git prevents checking out a branch that's already checked out elsewhere. If you need to freely switch branches across trees, set `fatTrees: true` to use independent full clones instead.
+
+## Claude Code plugin
+
+This repo is a Claude Code plugin. Install it to teach Claude how to work with workforest-managed repositories:
+
+```bash
+claude plugin add dwmkerr/git-workforest
+```
+
+This adds a `workforest` skill that helps Claude understand forest layouts, use `git forest` commands, and navigate between trees.
 
 ## Developer guide
 
