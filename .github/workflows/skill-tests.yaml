@@ -1,0 +1,22 @@
+name: Skill Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-skills:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dwmkerr/skill-test-action@main
+        with:
+          test_file: 'skills/**/skill-tests.yaml'
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          marketplaces: dwmkerr/git-workforest
+          plugins: git-workforest@git-workforest
+          timeout: '120'
