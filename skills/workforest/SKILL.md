@@ -1,6 +1,6 @@
 ---
 name: workforest
-description: "Teaches Claude Code how to work with git-workforest managed repositories. Use when the user mentions 'forest', 'workforest', 'git forest', worktree management, or when the current directory contains a .workforest.yaml marker file."
+description: "This skill should be used when the user asks about 'workforest', 'git forest', 'git forest status', 'git forest checkout', 'forest layout', or mentions managing worktrees with workforest. Also use when the user asks how workforest works, how to use git forest commands, or how to navigate a forest."
 user-invocable: true
 ---
 

@@ -2,14 +2,18 @@ skill: git-workforest:workforest
 model: haiku
 
 tests:
-  - id: workforest-mention
-    prompt: "how does workforest work?"
+  - id: workforest-explain
+    prompt: "explain what a workforest is and how to use it"
     should_trigger: true
 
-  - id: git-forest-mention
-    prompt: "run git forest status"
+  - id: workforest-setup
+    prompt: "how do I set up workforest for my repo?"
     should_trigger: true
 
-  - id: unrelated
+  - id: unrelated-git
     prompt: "how do I rebase my branch?"
+    should_trigger: false
+
+  - id: unrelated-npm
+    prompt: "how do I publish an npm package?"
     should_trigger: false
