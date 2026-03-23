@@ -1,5 +1,7 @@
 {
   "name": "git-workforest",
   "description": "Teaches Claude Code how to work with git-workforest managed repositories",
-  "author": "dwmkerr"
+  "author": {
+    "name": "dwmkerr"
+  }
 }
