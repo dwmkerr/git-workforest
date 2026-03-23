@@ -1,7 +1,7 @@
 ---
 name: workforest
 description: "Teaches Claude Code how to work with git-workforest managed repositories. Use when the user mentions 'forest', 'workforest', 'git forest', worktree management, or when the current directory contains a .workforest.yaml marker file."
-user-invocable: false
+user-invocable: true
 ---
 
 # Working with git-workforest
