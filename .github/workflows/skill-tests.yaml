@@ -17,7 +17,7 @@ jobs:
         with:
           test_file: 'skills/**/skill-tests.yaml'
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          marketplaces: dwmkerr/git-workforest
+          marketplaces: ${{ github.workspace }}
           plugins: git-workforest@git-workforest
           timeout: '120'
           max_turns: '1'
