@@ -107,6 +107,16 @@ fatTrees: false
 
 <sup>1</sup> **Fat trees**: With worktrees, git prevents checking out a branch that's already checked out elsewhere. If you need to freely switch branches across trees, set `fatTrees: true` to use independent full clones instead.
 
+## Claude Code plugin
+
+This repo is a Claude Code plugin. Install it to teach Claude how to work with workforest-managed repositories:
+
+```bash
+claude plugin add dwmkerr/git-workforest
+```
+
+This adds a `workforest` skill that helps Claude understand forest layouts, use `git forest` commands, and navigate between trees.
+
 ## Developer guide
 
 Clone and install:
