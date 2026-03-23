@@ -1,9 +1,13 @@
 {
+  "name": "git-workforest",
+  "owner": {
+    "name": "dwmkerr"
+  },
   "plugins": [
     {
       "name": "git-workforest",
+      "source": ".",
       "description": "Teaches Claude Code how to work with git-workforest managed repositories",
-      "path": ".",
       "version": "0.1.0"
     }
   ]
