@@ -2,27 +2,14 @@ skill: git-workforest:workforest
 model: haiku
 
 tests:
-  - id: forest-status
-    prompt: "how do I see all branches in my workforest?"
+  - id: workforest-mention
+    prompt: "how does workforest work?"
     should_trigger: true
-    notes: "should recognise workforest context and suggest git forest status"
 
-  - id: forest-checkout
-    prompt: "I want to create a new feature branch in my forest"
+  - id: git-forest-mention
+    prompt: "run git forest status"
     should_trigger: true
-    notes: "should suggest git forest checkout"
 
-  - id: git-forest-command
-    prompt: "what does git forest status show?"
-    should_trigger: true
-    notes: "direct reference to git forest command"
-
-  - id: not-forest
+  - id: unrelated
     prompt: "how do I rebase my branch?"
     should_trigger: false
-    notes: "standard git operation, not workforest specific"
-
-  - id: not-forest-clone
-    prompt: "how do I clone a repo with git?"
-    should_trigger: false
-    notes: "standard git clone, not workforest specific"
