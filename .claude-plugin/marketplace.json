@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    {
+      "name": "git-workforest",
+      "description": "Teaches Claude Code how to work with git-workforest managed repositories",
+      "path": ".",
+      "version": "0.1.0"
+    }
+  ]
+}
