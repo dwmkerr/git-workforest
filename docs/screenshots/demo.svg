@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 270" width="600" height="270">
+
+  <!-- Window background -->
+  <rect width="600" height="270" rx="8" fill="#0d1117"/>
+
+  <!-- Title bar: rounded top, squared bottom via overlap rect -->
+  <rect width="600" height="36" rx="8" fill="#161b22"/>
+  <rect y="28" width="600" height="8" fill="#161b22"/>
+
+  <!-- Traffic lights -->
+  <circle cx="20" cy="18" r="6" fill="#ff5f56"/>
+  <circle cx="40" cy="18" r="6" fill="#febc2e"/>
+  <circle cx="60" cy="18" r="6" fill="#27c93f"/>
+
+  <!-- Window title -->
+  <text x="300" y="23" text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    font-size="12" fill="#8b949e">Terminal</text>
+
+  <!-- Clip path: reveals command text character-by-character (17 chars × 7.8px = 132.6px) -->
+  <!-- Timeline: wait until 0.5s (4.17%), type 17 chars at 0.1s each until 2.2s (18.33%),  -->
+  <!--           hold until 9.0s (75%), then reset to 0 until 12s (100%)                    -->
+  <defs>
+    <clipPath id="cmd-clip">
+      <rect x="32" y="52" height="24" width="0">
+        <animate attributeName="width"
+          values="0;7.8;15.6;23.4;31.2;39;46.8;54.6;62.4;70.2;78;85.8;93.6;101.4;109.2;117;124.8;132.6;0;0"
+          keyTimes="0;0.0417;0.05;0.0583;0.0667;0.075;0.0833;0.0917;0.1;0.1083;0.1167;0.125;0.1333;0.1417;0.15;0.1583;0.1667;0.175;0.75;1"
+          calcMode="discrete"
+          dur="12s"
+          repeatCount="indefinite"/>
+      </rect>
+    </clipPath>
+  </defs>
+
+  <g font-family="'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, 'Courier New', monospace" font-size="13">
+
+    <!-- ── Line 1: prompt + command (command types in via clip-path) ── -->
+    <text x="16" y="68" fill="#7ee787">$&#160;
+      <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.75;0.875;1" dur="12s" repeatCount="indefinite"/>
+    </text>
+    <text x="32" y="68" fill="#e6edf3" clip-path="url(#cmd-clip)">git forest status</text>
+
+    <!-- ── Line 2: on branch feature/cli in git-workforest (appears at 2.6s) ── -->
+    <text x="16" y="100" opacity="0">
+      <tspan fill="#e6edf3">on branch </tspan><tspan fill="#56d364">feature/cli</tspan><tspan fill="#e6edf3"> in </tspan><tspan fill="#ffffff">git-workforest</tspan>
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.2167;0.2333;0.75;0.875;1" dur="12s" repeatCount="indefinite"/>
+    </text>
+
+    <!-- ── Line 3: trees: (appears at 3.0s) ── -->
+    <text x="16" y="130" fill="#e6edf3" opacity="0">trees:
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.25;0.267;0.75;0.875;1" dur="12s" repeatCount="indefinite"/>
+    </text>
+
+    <!-- ── Line 4: (default branch) main  ./main (appears at 3.3s) ── -->
+    <!-- Branch col: 15 chars × 7.8px = 117px from x=16 → path at x=133                   -->
+    <!--   "  main" = 6 chars + 9 spaces = 15 chars total                                   -->
+    <text x="16" y="152" opacity="0">
+      <tspan fill="#e6edf3">  main         </tspan><tspan x="133" fill="#ffffff">./main</tspan>
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.275;0.292;0.75;0.875;1" dur="12s" repeatCount="indefinite"/>
+    </text>
+
+    <!-- ── Line 5: (active) * feature/cli  ./feature/cli (appears at 3.6s) ── -->
+    <!--   "* feature/cli" = 13 chars + 2 spaces = 15 chars total                           -->
+    <text x="16" y="174" opacity="0">
+      <tspan fill="#e6edf3">* </tspan><tspan fill="#56d364">feature/cli</tspan><tspan fill="#e6edf3">  </tspan><tspan x="133" fill="#ffffff">./feature/cli</tspan>
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.3;0.317;0.75;0.875;1" dur="12s" repeatCount="indefinite"/>
+    </text>
+
+    <!-- ── Line 6: (worktree) + fix/typo  ./fix/typo (appears at 3.9s) ── -->
+    <!--   "+ fix/typo" = 10 chars + 5 spaces = 15 chars total                              -->
+    <text x="16" y="196" opacity="0">
+      <tspan fill="#e6edf3">+ </tspan><tspan fill="#39c5cf">fix/typo</tspan><tspan fill="#e6edf3">     </tspan><tspan x="133" fill="#ffffff">./fix/typo</tspan>
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.325;0.342;0.75;0.875;1" dur="12s" repeatCount="indefinite"/>
+    </text>
+
+    <!-- ── Line 7: second prompt (appears at 4.2s) ── -->
+    <text x="16" y="237" fill="#7ee787" opacity="0">$&#160;
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.35;0.367;0.75;0.875;1" dur="12s" repeatCount="indefinite"/>
+    </text>
+
+    <!-- ── Blinking cursor (starts at 4.3s, blinks every 0.5s, fades at 9.0s) ── -->
+    <rect x="32" y="223" width="8" height="16" fill="#7ee787" opacity="0">
+      <animate attributeName="opacity"
+        values="0;0;1;0;1;0;1;0;1;0;1;0;0"
+        keyTimes="0;0.358;0.4;0.4417;0.5;0.5417;0.5833;0.625;0.6667;0.7083;0.75;0.875;1"
+        dur="12s"
+        repeatCount="indefinite"/>
+    </rect>
+
+  </g>
+
+</svg>

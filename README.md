@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/status.png" width="600" alt="git forest status" />
+  <img src="docs/screenshots/demo.svg" width="600" alt="git forest status demo" />
 </p>
 
 ## Quickstart
