@@ -31,6 +31,10 @@ Superpowers subagent workforest
 
 `git forest clone` is analogous to `git clone` but uses forest structure and creates the `.workforest.yaml` marker. `forest init` would be the "I'm here, do the right thing" command.
 
+**Beautiful terminal screenshots for README**
+
+Create macOS-style terminal renderings (SVG or PNG with window chrome/borders) for README screenshots. Consider a tool or script that wraps shellwright PNGs in a macOS terminal frame. Separate task from content — tool for rendering, then capture each command.
+
 **Migrate: detect existing worktrees**
 
 On migrate, detect existing worktrees and show them in the preview instead of placeholder `<branch-1>/` names. Crop the list if there are many, e.g. `(additional 5 worktrees)`.
