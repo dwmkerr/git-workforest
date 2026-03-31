@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="420">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Window frame -->
+  <rect x="10" y="10" width="520" height="400" rx="10" ry="10" fill="#282c34" filter="url(#shadow)"/>
+
+  <!-- Title bar -->
+  <rect x="10" y="10" width="520" height="36" rx="10" ry="10" fill="#21252b"/>
+  <rect x="10" y="30" width="520" height="16" fill="#21252b"/>
+
+  <!-- Traffic lights -->
+  <circle cx="30" cy="28" r="6" fill="#ff5f57"/>
+  <circle cx="50" cy="28" r="6" fill="#febc2e"/>
+  <circle cx="70" cy="28" r="6" fill="#28c840"/>
+
+  <!-- Title text -->
+  <text x="270" y="32" font-family="SF Mono, Menlo, monospace" font-size="12" fill="#636d83" text-anchor="middle">Terminal</text>
+
+  <!-- Terminal content -->
+  <g font-family="SF Mono, Menlo, Consolas, monospace" font-size="13">
+    <!-- $ git forest migrate -->
+    <text x="24" y="72" fill="#e5e5e5" font-weight="bold">$ </text>
+    <text x="40" y="72" fill="#e5e5e5">git forest migrate</text>
+
+    <!-- existing repo detected. migration preview: -->
+    <text x="24" y="102" fill="#abb2bf">existing repo detected. migration preview:</text>
+
+    <!-- # before -->
+    <text x="40" y="132" fill="#636d83"># before</text>
+    <!-- myproject/ -->
+    <text x="40" y="152" fill="#abb2bf">myproject/</text>
+
+    <!-- # after -->
+    <text x="40" y="182" fill="#636d83"># after</text>
+    <!-- myproject/ -->
+    <text x="40" y="202" fill="#abb2bf">myproject/</text>
+    <!--   .workforest.yaml -->
+    <text x="56" y="222" fill="#abb2bf">.workforest.yaml       </text>
+    <text x="248" y="222" fill="#636d83"># preferences</text>
+    <!--   main/ -->
+    <text x="56" y="242" fill="#abb2bf">main/                  </text>
+    <text x="248" y="242" fill="#636d83"># main branch</text>
+    <!--   <branch-1>/ -->
+    <text x="56" y="262" fill="#abb2bf">&lt;branch-1&gt;/            </text>
+    <text x="248" y="262" fill="#636d83"># worktree</text>
+    <!--   <branch-2>/ -->
+    <text x="56" y="282" fill="#abb2bf">&lt;branch-2&gt;/            </text>
+    <text x="248" y="282" fill="#636d83"># etc</text>
+
+    <!-- no files will be changed -->
+    <text x="24" y="312" fill="#abb2bf">no files will be changed, folder rename only.</text>
+    <!-- migrate prompt -->
+    <text x="24" y="332" fill="#abb2bf">migrate to forest layout? (y/N) </text>
+    <text x="280" y="332" fill="#e5e5e5">y</text>
+    <!-- migrated -->
+    <text x="24" y="352" fill="#abb2bf">migrated to forest layout.</text>
+
+    <!-- cd hint -->
+    <text x="24" y="382" fill="#636d83"># please change directory:</text>
+    <text x="24" y="402" fill="#e5e5e5" font-weight="bold">cd main</text>
+  </g>
+</svg>
