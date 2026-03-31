@@ -78,6 +78,16 @@ Check out a branch — finds an existing tree or creates a new worktree. Also av
 
 <img src="docs/screenshots/checkout.png" width="600" alt="git forest checkout" />
 
+### `git forest branch [-l]`
+
+List all branches/trees in the forest. Mirrors `git branch -l` conventions: `*` marks the active branch, `+` marks other worktrees, and the default branch appears first with no prefix. The `-l` flag is accepted for git compatibility but listing is always the default behaviour.
+
+```
+  main  ./main
++ fix-typo  ./fix-typo
+* feat/new-ui  ./feat/new-ui
+```
+
 ### `git forest status`
 
 Show all trees in the current forest. Highlights the active branch when run from inside a tree.

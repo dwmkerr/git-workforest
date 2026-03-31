@@ -14,6 +14,7 @@ import readline from "readline/promises";
 import chalk from "chalk";
 import path from "path";
 import { statusTrees, formatTreeLine } from "./commands/status.js";
+import { branchCommand } from "./commands/branch.js";
 import { getRepoName } from "./git.js";
 
 const require = createRequire(import.meta.url);
@@ -328,5 +329,41 @@ program
   .command("status")
   .description("Show trees and current branch for the forest")
   .action(runStatus);
+
+program
+  .command("branch")
+  .description("List all branches/trees in the forest (like git branch -l)")
+  .option("-l, --list", "List branches (default behaviour)")
+  .action(async () => {
+    try {
+      const { forestRoot, trees } = await branchCommand(process.cwd());
+      for (const tree of trees) {
+        const prefix = tree.active ? "* " : tree.isDefault ? "  " : "+ ";
+        const branch = tree.active
+          ? chalk.green(tree.branch)
+          : tree.isDefault ? tree.branch : chalk.cyan(tree.branch);
+        const rel = chalk.whiteBright("./" + path.relative(forestRoot, tree.path));
+        console.log(`${prefix}${branch}  ${rel}`);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("not inside a workforest")) {
+        const context = await detectContext(process.cwd());
+        if (context === "repo") {
+          const { getRepoRoot } = await import("./git.js");
+          const gitRoot = await getRepoRoot(process.cwd());
+          const repoName = path.basename(gitRoot);
+          console.log(`in repo ${chalk.whiteBright(repoName)}, not a forest yet. to migrate:\n`);
+          console.log(`  ${chalk.whiteBright("git forest migrate")}`);
+        } else {
+          console.log("not in a repo. to get started:\n");
+          console.log(`  ${chalk.whiteBright("git forest clone org/repo")}`);
+        }
+      } else {
+        error(message);
+        process.exit(1);
+      }
+    }
+  });
 
 program.parse();
