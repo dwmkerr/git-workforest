@@ -49,10 +49,11 @@ The comment line is dimmed (`chalk.dim`), the `cd` command is bright white (`cha
 
 Use the shellwright MCP server to capture screenshots for `docs/screenshots/`:
 
-1. `shell_start` — command: `bash`, args: `["--login", "-i"]`, theme: `one-dark`, cols: `100`, rows: `22` (adjust to fit content without wrapping)
-2. `cd` to the target forest, `clear`, then run the command
-3. `shell_screenshot` — border: `{ style: "macos", title: "Terminal" }`
-4. `curl -o docs/screenshots/<name>.png <download_url>`
-5. `shell_stop`
+1. `shell_start` — command: `bash`, args: `["--login", "-i"]`, theme: `one-dark`, cols: `80`, rows: `22` (adjust to fit content without wrapping)
+2. Set a clean prompt: `export PS1='$ '` then `cd` to the target forest, then `clear`
+3. Run the command
+4. `shell_screenshot` — border: `{ style: "macos", title: "Terminal" }`
+5. `curl -o docs/screenshots/<name>.png <download_url>`
+6. `shell_stop`
 
-Use bash (not zsh) — the dwmkerr prompt renders correctly in bash via shellwright. Verify no line wrapping before taking the screenshot.
+The prompt MUST be a plain bright white `$ ` — no username, path, git branch, or conda env. Always set `PS1` before taking screenshots. Use bash (not zsh). Verify no line wrapping before taking the screenshot.
