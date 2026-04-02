@@ -50,10 +50,10 @@ The comment line is dimmed (`chalk.dim`), the `cd` command is bright white (`cha
 Use the shellwright MCP server to capture screenshots for `docs/screenshots/`:
 
 1. `shell_start` — command: `bash`, args: `["--login", "-i"]`, theme: `one-dark`, cols: `80`, rows: `22` (adjust to fit content without wrapping)
-2. Set a clean prompt: `export PS1='$ '` then `cd` to the target forest, then `clear`
+2. Set a clean bright white prompt: `PS1=$(printf '\033[97m$ \033[0m')` then `cd` to the target forest, then `clear`
 3. Run the command
 4. `shell_screenshot` — border: `{ style: "macos", title: "Terminal" }`
 5. `curl -o docs/screenshots/<name>.png <download_url>`
 6. `shell_stop`
 
-The prompt MUST be a plain bright white `$ ` — no username, path, git branch, or conda env. Always set `PS1` before taking screenshots. Use bash (not zsh). Verify no line wrapping before taking the screenshot.
+The prompt MUST be a bright white `$ ` (ANSI 97) — no username, path, git branch, or conda env. Always set `PS1` before taking screenshots. Use bash (not zsh). Verify no line wrapping before taking the screenshot.

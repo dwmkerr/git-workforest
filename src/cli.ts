@@ -122,10 +122,10 @@ program
       const result = await checkoutCommand(branch, process.cwd(), config, gitArgs);
       const rel = path.relative(process.cwd(), result.treePath);
       if (result.created) {
-        console.log(`checked out ${chalk.green(result.branch)}.`);
+        console.log(`added ${chalk.green(result.branch)}.`);
         printCdHint(rel);
       } else if (rel) {
-        console.log(`already checked out.`);
+        console.log(`already exists: ${chalk.cyan(result.branch)} at ${chalk.whiteBright(rel)}`);
         printCdHint(rel);
       } else {
         console.log(`already on ${chalk.green(result.branch)}.`);
