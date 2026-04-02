@@ -2,9 +2,19 @@ import { promises as fs } from "fs";
 import path from "path";
 import { findForestRoot } from "../paths.js";
 import { execFile } from "child_process";
-import { promisify } from "util";
 
-const exec = promisify(execFile);
+function exec(
+  cmd: string,
+  args: string[],
+  opts: { cwd?: string } = {},
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    execFile(cmd, args, opts, (err, stdout, stderr) => {
+      if (err) reject(err);
+      else resolve({ stdout: stdout ?? "", stderr: stderr ?? "" });
+    });
+  });
+}
 
 export interface TreeEntry {
   name: string;

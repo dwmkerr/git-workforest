@@ -1,19 +1,17 @@
-import { execFile, spawn } from "child_process";
-import { promisify } from "util";
+import { execFile } from "child_process";
 
-const exec = promisify(execFile);
-
-function run(
+// promisify(execFile) can leave handles open that prevent node from exiting;
+// this wrapper resolves cleanly via the callback API
+function exec(
   cmd: string,
   args: string[],
-  opts: { cwd?: string; quiet?: boolean } = {},
-): Promise<void> {
+  opts: { cwd?: string } = {},
+): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    const { quiet, ...spawnOpts } = opts;
-    const child = spawn(cmd, args, { ...spawnOpts, stdio: quiet ? "pipe" : "inherit" });
-    child.on("close", (code) =>
-      code === 0 ? resolve() : reject(new Error(`${cmd} ${args.join(" ")} exited with ${code}`)),
-    );
+    execFile(cmd, args, opts, (err, stdout, stderr) => {
+      if (err) reject(err);
+      else resolve({ stdout: stdout ?? "", stderr: stderr ?? "" });
+    });
   });
 }
 
@@ -48,12 +46,12 @@ export async function gitWorktreeAdd(
 ): Promise<void> {
   try {
     // Check out existing branch (local or remote tracking)
-    await run("git", ["worktree", "add", treePath, branch, ...extraArgs], {
-      cwd: repoDir, quiet: true,
+    await exec("git", ["worktree", "add", treePath, branch, ...extraArgs], {
+      cwd: repoDir,
     });
   } catch {
     // Branch doesn't exist — create it
-    await run("git", ["worktree", "add", "-b", branch, treePath, ...extraArgs], {
+    await exec("git", ["worktree", "add", "-b", branch, treePath, ...extraArgs], {
       cwd: repoDir,
     });
   }

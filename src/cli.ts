@@ -9,6 +9,7 @@ import {
   migrateToForest,
   buildMigratePreview,
 } from "./commands/migrate.js";
+import { removeCommand } from "./commands/remove.js";
 import { resolveRepoPath } from "./paths.js";
 import readline from "readline/promises";
 import chalk from "chalk";
@@ -44,7 +45,7 @@ const program = new Command();
 program
   .name("git-workforest")
   .description(
-    "Managed worktrees with structure. Clone once, branch into folders.",
+    "Manage git worktrees with a simple, predictable folder structure.",
   )
   .version(version)
   .addHelpText(
@@ -58,11 +59,14 @@ examples:
   # clone a repo into a structured forest
   git forest clone dwmkerr/effective-shell
 
-  # migrate an existing repo to forest layout
-  cd ~/repos/myproject && git forest migrate
+  # list all trees in the forest
+  git forest list
 
-  # show forest status
-  git forest status`,
+  # add a new tree for a branch
+  git forest add fix/typo
+
+  # remove a tree
+  git forest remove fix/typo`,
   );
 
 program
@@ -109,9 +113,9 @@ program
   });
 
 program
-  .command("checkout <branch> [gitArgs...]")
-  .alias("tree")
-  .description("check out a branch (find or create its tree)")
+  .command("add <branch> [gitArgs...]")
+  .aliases(["checkout", "tree"])
+  .description("add a tree for a branch (like git worktree add)")
   .allowUnknownOption()
   .action(async (branch: string, gitArgs: string[]) => {
     try {
@@ -325,8 +329,24 @@ async function runStatus(): Promise<void> {
 }
 
 program
-  .command("status")
-  .description("Show trees and current branch for the forest")
+  .command("list")
+  .alias("status")
+  .description("list all trees in the forest (like git worktree list)")
   .action(runStatus);
+
+program
+  .command("remove <branch>")
+  .description("remove a tree from the forest (like git worktree remove)")
+  .option("-f, --force", "force removal even if tree has uncommitted changes")
+  .action(async (branch: string, opts: { force?: boolean }) => {
+    try {
+      const result = await removeCommand(branch, process.cwd(), opts.force);
+      console.log(`removed ${chalk.cyan(result.branch)}.`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      error(message);
+      process.exit(1);
+    }
+  });
 
 program.parse();
