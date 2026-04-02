@@ -67,7 +67,7 @@ Branches are created as git worktrees by default, so they share the same `.git` 
 
 ### `git forest list`
 
-List all trees in the forest. Highlights the active branch when run from inside a tree. Also available as `git forest status`.
+List all trees in the forest. Highlights the active branch when run from inside a tree.
 
 ```bash
 # like: git worktree list
@@ -78,7 +78,7 @@ git forest list
 
 ### `git forest add <branch>`
 
-Add a tree for a branch — finds an existing tree or creates a new worktree. Also available as `git forest checkout`.
+Add a tree for a branch — finds an existing tree or creates a new worktree.
 
 ```bash
 # like: git worktree add ../fix-typo fix-typo

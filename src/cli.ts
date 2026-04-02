@@ -114,7 +114,6 @@ program
 
 program
   .command("add <branch> [gitArgs...]")
-  .aliases(["checkout", "tree"])
   .description("add a tree for a branch (like git worktree add)")
   .allowUnknownOption()
   .action(async (branch: string, gitArgs: string[]) => {
@@ -330,7 +329,6 @@ async function runStatus(): Promise<void> {
 
 program
   .command("list")
-  .alias("status")
   .description("list all trees in the forest (like git worktree list)")
   .action(runStatus);
 

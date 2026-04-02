@@ -24,8 +24,6 @@ A directory is a forest if it contains a `.workforest.yaml` marker file. Trees (
 | `git forest migrate` | Convert existing repo to forest layout | - |
 | `git forest init` | Detect context and set up a forest | - |
 
-Aliases: `git forest status` = `git forest list`, `git forest checkout` = `git forest add`.
-
 ## Forest layout
 
 ```
