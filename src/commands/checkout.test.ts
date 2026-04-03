@@ -93,4 +93,14 @@ describe("checkout command", () => {
     ).rejects.toThrow("not inside a workforest");
     await fs.rm(randomDir, { recursive: true });
   });
+
+  it("passes extra args to git worktree add", async () => {
+    const config = { ...DEFAULT_CONFIG };
+    // --no-track is a valid git worktree add flag that shouldn't affect the result
+    const result = await checkoutCommand("extra-args-branch", mainDir, config, ["--no-track"]);
+    expect(result.created).toBe(true);
+    expect(result.treePath).toBe(path.join(repoRoot, "extra-args-branch"));
+    const stat = await fs.stat(result.treePath);
+    expect(stat.isDirectory()).toBe(true);
+  });
 });

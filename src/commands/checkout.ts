@@ -1,4 +1,5 @@
 import { gitWorktreeAdd, gitFatClone, getRepoRoot } from "../git.js";
+import type { GitOptions } from "../git.js";
 import type { WorkforestConfig } from "../config.js";
 import { resolveTreePath, findForestRoot } from "../paths.js";
 import { statusTrees } from "./status.js";
@@ -14,6 +15,7 @@ export async function checkoutCommand(
   cwd: string,
   config: WorkforestConfig,
   extraArgs: string[] = [],
+  opts: GitOptions = {},
 ): Promise<CheckoutResult> {
   const forestRoot = await findForestRoot(cwd);
   if (!forestRoot) {
@@ -44,9 +46,9 @@ export async function checkoutCommand(
   const treePath = resolveTreePath(forestRoot, config.treeDir, branch);
 
   if (config.fatTrees) {
-    await gitFatClone(gitRoot, treePath, branch);
+    await gitFatClone(gitRoot, treePath, branch, opts);
   } else {
-    await gitWorktreeAdd(gitRoot, treePath, branch, extraArgs);
+    await gitWorktreeAdd(gitRoot, treePath, branch, extraArgs, opts);
   }
 
   return { treePath, branch, created: true };
