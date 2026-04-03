@@ -75,10 +75,10 @@ program
   .description("Clone a GitHub repo into the structured forest path")
   .option("-y, --yes", "Skip confirmation prompt")
   .action(async (repo: string, opts: { yes?: boolean }) => {
-    const { verbose } = program.opts();
     const spinner = ora();
     try {
       const config = await loadConfig();
+      const verbose = program.opts().verbose || config.verbose;
       const parts = repo.split("/");
       if (parts.length !== 2) {
         throw new Error(
@@ -119,9 +119,9 @@ program
   .description("add a tree for a branch (like git worktree add)")
   .allowUnknownOption()
   .action(async (branch: string, gitArgs: string[]) => {
-    const { verbose } = program.opts();
     try {
       const config = await loadConfig();
+      const verbose = program.opts().verbose || config.verbose;
       const result = await checkoutCommand(branch, process.cwd(), config, gitArgs, { verbose });
       const rel = path.relative(process.cwd(), result.treePath);
       if (result.created) {
@@ -158,10 +158,10 @@ program
   .command("migrate")
   .description("Migrate an existing repo to forest layout, or clone a new one")
   .action(async () => {
-    const { verbose } = program.opts();
     const spinner = ora();
     try {
       const config = await loadConfig();
+      const verbose = program.opts().verbose || config.verbose;
       const context = await detectContext(process.cwd());
 
       if (context === "repo") {
@@ -342,8 +342,9 @@ program
   .allowUnknownOption()
   .option("-f, --force", "force removal even if tree has uncommitted changes")
   .action(async (branch: string, gitArgs: string[], opts: { force?: boolean }) => {
-    const { verbose } = program.opts();
     try {
+      const config = await loadConfig();
+      const verbose = program.opts().verbose || config.verbose;
       const result = await removeCommand(branch, process.cwd(), opts.force, gitArgs, { verbose });
       console.log(`removed ${chalk.cyan(result.branch)}.`);
     } catch (err: unknown) {
