@@ -48,6 +48,7 @@ program
     "Manage git worktrees with a simple, predictable folder structure.",
   )
   .version(version)
+  .option("-v, --verbose", "show git command output")
   .addHelpText(
     "after",
     `
@@ -77,6 +78,7 @@ program
     const spinner = ora();
     try {
       const config = await loadConfig();
+      const verbose = program.opts().verbose || config.verbose;
       const parts = repo.split("/");
       if (parts.length !== 2) {
         throw new Error(
@@ -102,7 +104,7 @@ program
       }
 
       spinner.start(`cloning ${org}/${repoName}...`);
-      const result = await cloneCommand(repoUrl, org, repoName, config);
+      const result = await cloneCommand(repoUrl, org, repoName, config, { verbose });
       spinner.succeed(`cloned to ${result.treePath}`);
     } catch (err: unknown) {
       spinner.stop();
@@ -119,7 +121,8 @@ program
   .action(async (branch: string, gitArgs: string[]) => {
     try {
       const config = await loadConfig();
-      const result = await checkoutCommand(branch, process.cwd(), config, gitArgs);
+      const verbose = program.opts().verbose || config.verbose;
+      const result = await checkoutCommand(branch, process.cwd(), config, gitArgs, { verbose });
       const rel = path.relative(process.cwd(), result.treePath);
       if (result.created) {
         console.log(`added ${chalk.green(result.branch)}.`);
@@ -158,6 +161,7 @@ program
     const spinner = ora();
     try {
       const config = await loadConfig();
+      const verbose = program.opts().verbose || config.verbose;
       const context = await detectContext(process.cwd());
 
       if (context === "repo") {
@@ -198,7 +202,7 @@ program
         const [org, repoName] = repo.split("/");
         const repoUrl = `git@github.com:${org}/${repoName}`;
         spinner.start(`cloning ${org}/${repoName}...`);
-        const result = await cloneCommand(repoUrl, org, repoName, config);
+        const result = await cloneCommand(repoUrl, org, repoName, config, { verbose });
         spinner.succeed(`cloned to ${result.treePath}`);
       }
     } catch (err: unknown) {
@@ -333,12 +337,15 @@ program
   .action(runStatus);
 
 program
-  .command("remove <branch>")
+  .command("remove <branch> [gitArgs...]")
   .description("remove a tree from the forest (like git worktree remove)")
+  .allowUnknownOption()
   .option("-f, --force", "force removal even if tree has uncommitted changes")
-  .action(async (branch: string, opts: { force?: boolean }) => {
+  .action(async (branch: string, gitArgs: string[], opts: { force?: boolean }) => {
     try {
-      const result = await removeCommand(branch, process.cwd(), opts.force);
+      const config = await loadConfig();
+      const verbose = program.opts().verbose || config.verbose;
+      const result = await removeCommand(branch, process.cwd(), opts.force, gitArgs, { verbose });
       console.log(`removed ${chalk.cyan(result.branch)}.`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

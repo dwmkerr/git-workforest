@@ -73,6 +73,20 @@ Each branch gets its own folder inside the forest:
 
 Branches are created as git worktrees by default, so they share the same `.git` data. See [`fatTrees`](#configuration) if you need full clones<sup>1</sup>.
 
+## Global flags
+
+| Flag | Description |
+|------|-------------|
+| `-v, --verbose` | Print each git command and its output (dimmed) — useful for diagnosing unexpected behaviour |
+
+```bash
+git forest -v add fix-typo
+# $ git worktree add ../fix-typo fix-typo
+# added fix-typo.
+```
+
+You can also enable verbose mode permanently via the [config file](#configuration) (`verbose: true`).
+
 ## Commands
 
 ### `git forest list`
@@ -159,6 +173,7 @@ Customise behaviour in `~/.workforest.yaml`:
 reposDir: "~/repos/[provider]/[org]/[repo]"
 treeDir: "[branch]"
 fatTrees: false
+verbose: false
 ```
 
 | Parameter | Default | Description |
@@ -166,6 +181,7 @@ fatTrees: false
 | `reposDir` | `~/repos/[provider]/[org]/[repo]` | Path template for cloned repos. Tokens: `[provider]`, `[org]`, `[repo]` |
 | `treeDir` | `[branch]` | Subdirectory name for each tree. Token: `[branch]` |
 | `fatTrees` | `false` | Use full clones instead of git worktrees (see below) |
+| `verbose` | `false` | Print each git command and its output — same as passing `-v` on every command |
 
 <sup>1</sup> **Fat trees**: With worktrees, git prevents checking out a branch that's already checked out elsewhere. If you need to freely switch branches across trees, set `fatTrees: true` to use independent full clones instead.
 
