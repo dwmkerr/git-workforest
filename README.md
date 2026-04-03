@@ -1,6 +1,6 @@
 <p align="center">
   <h2 align="center"><code>🌲 git-workforest</code></h2>
-  <h3 align="center">Git worktrees organised into a simple and predictable folder structure.<br/>Use <code>git forest</code> commands to quickly clone, checkout and switch between branches.</h3>
+  <h3 align="center">Manage git worktrees with a simple, predictable folder structure.<br/>Like <code>git worktree</code>, but handles paths for you.</h3>
   <p align="center">
     <a href="https://www.npmjs.com/package/workforest"><img src="https://img.shields.io/npm/v/workforest" alt="npm" /></a>
     <a href="https://codecov.io/gh/dwmkerr/git-workforest"><img src="https://codecov.io/gh/dwmkerr/git-workforest/branch/main/graph/badge.svg" alt="codecov" /></a>
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/status.png" width="600" alt="git forest status" />
+  <img src="docs/screenshots/list.png" width="600" alt="git forest list" />
 </p>
 
 ## Quickstart
@@ -25,20 +25,38 @@ Install:
 npm install -g @dwmkerr/git-workforest
 ```
 
-Run `git forest init` from anywhere. If you are in a repo it'll show the worktrees and offer to migrate to the workforest structure if needed. If you are not in a repo then `git forest init` will show how to clone.
-
 ```bash
-# Move to a repo.
-cd ~/repos/effective-shell
-
-# Migrate to the workforest folder structure...
+# Run init from anywhere — it detects your context and suggests what to do.
 git forest init
 
-# ...or just clone an existing repo.
-git forest clone dwmkerr/git-workforest
+# Migrate an existing repo to forest layout.
+cd ~/repos/effective-shell
+git forest migrate
+# ~/repos/effective-shell/ is now:
+#   .workforest.yaml
+#   main/                   <- you are here
+
+# Or clone a repo into a new forest.
+git forest clone dwmkerr/effective-shell
+# ~/repos/github/dwmkerr/effective-shell/
+#   .workforest.yaml
+#   main/
+
+# List all trees.
+git forest list
+
+# Add a tree for a branch.
+git forest add fix-typo
+# ~/repos/github/dwmkerr/effective-shell/
+#   .workforest.yaml
+#   main/
+#   fix-typo/               <- new tree
+
+# Remove a tree.
+git forest remove fix-typo
 ```
 
-You can also use the aliases `git-workforest` or `workforest`. As much as possible the structure existing `git` commands is followed, for example `git forest checkout` will checkout or create a branch as needed.
+Commands mirror `git worktree` semantics — `list`, `add`, `remove` — but workforest handles paths automatically. You can also use the aliases `git-workforest` or `workforest`.
 
 ## Worktree folder structure
 
@@ -57,13 +75,68 @@ Branches are created as git worktrees by default, so they share the same `.git` 
 
 ## Commands
 
+### `git forest list`
+
+List all trees in the forest. Highlights the active branch when run from inside a tree.
+
+```bash
+# like: git worktree list
+git forest list
+# on branch main in dwmkerr/effective-shell
+#
+# trees:
+# * main            ./main
+# + feat/dark-mode  ./feat/dark-mode
+# + fix-typo        ./fix-typo
+```
+
+<img src="docs/screenshots/list.png" width="600" alt="git forest list" />
+
+### `git forest add <branch>`
+
+Add a tree for a branch — finds an existing tree or creates a new worktree.
+
+```bash
+# like: git worktree add ../big-refactor big-refactor
+git forest add big-refactor
+# added big-refactor.
+#
+# effective-shell/
+#   main/
+#   fix-typo/
+#   big-refactor/       <- new tree
+```
+
+<img src="docs/screenshots/add.png" width="600" alt="git forest add" />
+
+### `git forest remove <branch>`
+
+Remove a tree from the forest. Refuses if the tree has uncommitted changes (use `-f` to force).
+
+```bash
+# like: git worktree remove ../fix-typo
+git forest remove fix-typo
+# removed fix-typo.
+#
+# effective-shell/
+#   main/
+#   big-refactor/
+
+# force remove even if dirty
+git forest remove -f big-refactor
+```
+
 ### `git forest clone <org/repo>`
 
-Clone a GitHub repo into the structured forest path. Shows the proposed location and asks for confirmation. Use `-y` to skip the prompt.
+Clone a GitHub repo into a new forest. Shows the proposed location and asks for confirmation. Use `-y` to skip the prompt.
 
 ```bash
 git forest clone dwmkerr/effective-shell
 # clone dwmkerr/effective-shell to ~/repos/github/dwmkerr/effective-shell? (Y/n)
+#
+# effective-shell/
+#   .workforest.yaml
+#   main/
 ```
 
 ### `git forest migrate`
@@ -72,27 +145,15 @@ Migrate an existing repo to forest layout. Shows a before/after preview with you
 
 <img src="docs/screenshots/migrate.png" width="600" alt="git forest migrate" />
 
-### `git forest checkout <branch>`
-
-Check out a branch — finds an existing tree or creates a new worktree. Also available as `git forest tree`.
-
-<img src="docs/screenshots/checkout.png" width="600" alt="git forest checkout" />
-
-### `git forest status`
-
-Show all trees in the current forest. Highlights the active branch when run from inside a tree.
-
-<img src="docs/screenshots/status.png" width="600" alt="git forest status" />
-
 ### `git forest init`
 
-Detect your context and do the right thing — show status if already a forest, offer to migrate if inside a repo, or suggest cloning if empty.
+Detect your context and do the right thing — show trees if already a forest, offer to migrate if inside a repo, or suggest cloning if empty.
 
 <img src="docs/screenshots/init.png" width="600" alt="git forest init" />
 
 ## Configuration
 
-Create `~/.workforest.yaml` to customise behaviour:
+Customise behaviour in `~/.workforest.yaml`:
 
 ```yaml
 reposDir: "~/repos/[provider]/[org]/[repo]"
