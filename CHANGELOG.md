@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.0](https://github.com/dwmkerr/git-workforest/compare/v0.1.0...v0.2.0) (2026-04-03)
+
+
+### Features
+
+* add Claude Code plugin with workforest skill ([#35](https://github.com/dwmkerr/git-workforest/issues/35)) ([3d0c806](https://github.com/dwmkerr/git-workforest/commit/3d0c806b79e8a897bd856ac9d9cba618086fba1c))
+* add codecov coverage reporting to CI ([#33](https://github.com/dwmkerr/git-workforest/issues/33)) ([9aff125](https://github.com/dwmkerr/git-workforest/commit/9aff125433f0940a07c23c3fe2985603470a982a))
+* align commands with git worktree semantics (list, add, remove) ([#39](https://github.com/dwmkerr/git-workforest/issues/39)) ([e81c3a1](https://github.com/dwmkerr/git-workforest/commit/e81c3a100e9e53200fc314629e9547784b811257))
+
 ## [0.1.0](https://github.com/dwmkerr/git-workforest/compare/v0.0.1...v0.1.0) (2026-03-18)
 
 
