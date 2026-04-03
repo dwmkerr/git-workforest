@@ -26,23 +26,33 @@ npm install -g @dwmkerr/git-workforest
 ```
 
 ```bash
+# Run init from anywhere — it detects your context and suggests what to do.
+git forest init
+
 # Migrate an existing repo to forest layout.
 cd ~/repos/effective-shell
 git forest migrate
+# ~/repos/effective-shell/ is now:
+#   .workforest.yaml
+#   main/                   <- you are here
 
 # Or clone a repo into a new forest.
 git forest clone dwmkerr/effective-shell
+# ~/repos/github/dwmkerr/effective-shell/
+#   .workforest.yaml
+#   main/
 
 # List all trees.
-# (like: git worktree list)
 git forest list
 
 # Add a tree for a branch.
-# (like: git worktree add ../fix-typo fix-typo)
 git forest add fix-typo
+# ~/repos/github/dwmkerr/effective-shell/
+#   .workforest.yaml
+#   main/
+#   fix-typo/               <- new tree
 
 # Remove a tree.
-# (like: git worktree remove ../fix-typo)
 git forest remove fix-typo
 ```
 
@@ -72,6 +82,12 @@ List all trees in the forest. Highlights the active branch when run from inside 
 ```bash
 # like: git worktree list
 git forest list
+# on branch main in dwmkerr/effective-shell
+#
+# trees:
+# * main            ./main
+# + feat/dark-mode  ./feat/dark-mode
+# + fix-typo        ./fix-typo
 ```
 
 <img src="docs/screenshots/list.png" width="600" alt="git forest list" />
@@ -81,8 +97,14 @@ git forest list
 Add a tree for a branch — finds an existing tree or creates a new worktree.
 
 ```bash
-# like: git worktree add ../fix-typo fix-typo
-git forest add fix-typo
+# like: git worktree add ../big-refactor big-refactor
+git forest add big-refactor
+# added big-refactor.
+#
+# effective-shell/
+#   main/
+#   fix-typo/
+#   big-refactor/       <- new tree
 ```
 
 <img src="docs/screenshots/add.png" width="600" alt="git forest add" />
@@ -94,9 +116,14 @@ Remove a tree from the forest. Refuses if the tree has uncommitted changes (use 
 ```bash
 # like: git worktree remove ../fix-typo
 git forest remove fix-typo
+# removed fix-typo.
+#
+# effective-shell/
+#   main/
+#   big-refactor/
 
 # force remove even if dirty
-git forest remove -f fix-typo
+git forest remove -f big-refactor
 ```
 
 ### `git forest clone <org/repo>`
@@ -106,6 +133,10 @@ Clone a GitHub repo into a new forest. Shows the proposed location and asks for 
 ```bash
 git forest clone dwmkerr/effective-shell
 # clone dwmkerr/effective-shell to ~/repos/github/dwmkerr/effective-shell? (Y/n)
+#
+# effective-shell/
+#   .workforest.yaml
+#   main/
 ```
 
 ### `git forest migrate`

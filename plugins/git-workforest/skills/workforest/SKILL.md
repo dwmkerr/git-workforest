@@ -26,16 +26,17 @@ A directory is a forest if it contains a `.workforest.yaml` marker file. Trees (
 
 ## Forest layout
 
+The forest root is the top-level directory containing `.workforest.yaml`. It is NOT a git repo itself — each tree inside it is an independent git checkout. All `git forest` commands can run from any tree or the forest root; workforest walks up to find `.workforest.yaml` automatically.
+
 ```
-my-project/                    # forest root (.workforest.yaml here)
-  main/                        # default branch (primary clone)
+~/repos/github/dwmkerr/effective-shell/   # forest root
+  .workforest.yaml                         # marks this as a forest
+  main/                                    # default branch (primary clone)
   feat/
-    dark-mode/                 # git worktree or fat clone
+    dark-mode/                             # worktree or fat clone
     sessions-view/
   fix/
     login-bug/
-  docs/
-    readme/
 ```
 
 ## List output conventions
@@ -67,9 +68,18 @@ trees:
 
 ## Adding and removing trees
 
+All commands run from inside a tree (e.g. `~/repos/github/dwmkerr/effective-shell/main/`). The forest root is the parent directory containing `.workforest.yaml` — workforest resolves it automatically. New trees are created as siblings of your current tree:
+
 ```bash
-git forest add feat/new-feature    # creates ./feat/new-feature/
-git forest add fix/bug-123         # creates ./fix/bug-123/
+# pwd: ~/repos/github/dwmkerr/effective-shell/main/
+
+git forest add feat/new-feature
+# creates ~/repos/github/dwmkerr/effective-shell/feat/new-feature/
+# prints: cd ../feat/new-feature
+
+git forest add fix/bug-123
+# creates ~/repos/github/dwmkerr/effective-shell/fix/bug-123/
+
 git forest remove fix/bug-123      # removes the tree (refuses if dirty)
 git forest remove -f fix/bug-123   # force remove even with uncommitted changes
 ```

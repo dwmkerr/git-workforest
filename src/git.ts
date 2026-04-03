@@ -87,7 +87,7 @@ export async function isInsideWorktree(dir: string): Promise<boolean> {
 
 export async function getRepoName(dir: string, fallback?: string): Promise<string> {
   try {
-    const { stdout } = await exec("git", ["remote", "get-url", "origin"], {
+    const { stdout } = await exec("git", ["config", "remote.origin.url"], {
       cwd: dir,
     });
     const url = stdout.trim();
