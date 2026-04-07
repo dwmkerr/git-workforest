@@ -343,6 +343,13 @@ program
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       error(message);
+      const forestRoot = (err as { forestRoot?: string }).forestRoot;
+      if (forestRoot) {
+        console.log();
+        console.log(chalk.dim("# try changing to the forest root and removing:"));
+        console.log(chalk.whiteBright(`cd ${forestRoot}`));
+        console.log(chalk.whiteBright(`git forest remove ${branch}`));
+      }
       process.exit(1);
     }
   });

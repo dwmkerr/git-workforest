@@ -45,6 +45,20 @@ cd <path>
 
 The comment line is dimmed (`chalk.dim`), the `cd` command is bright white (`chalk.whiteBright`). No blank line between the spinner output and the hint.
 
+## Error hint pattern
+
+When an error includes a suggested recovery command (e.g. cd somewhere and re-run), print a blank line after the `error:` line, then the bash-style hint:
+
+```
+error: cannot remove the active tree.
+
+# try changing to the forest root and removing:
+cd <forest-root>
+git forest remove <branch>
+```
+
+The comment line is dimmed (`chalk.dim`); commands are bright white (`chalk.whiteBright`). The blank line separates the error from the hint so it reads cleanly.
+
 ## Terminal screenshots
 
 Use the shellwright MCP server to capture screenshots for `docs/screenshots/`:
