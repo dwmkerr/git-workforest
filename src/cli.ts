@@ -338,6 +338,7 @@ program
 
 program
   .command("remove <branch> [gitArgs...]")
+  .alias("delete")
   .description("remove a tree from the forest (like git worktree remove)")
   .allowUnknownOption()
   .option("-f, --force", "force removal even if tree has uncommitted changes")
@@ -350,6 +351,13 @@ program
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       error(message);
+      const forestRoot = (err as { forestRoot?: string }).forestRoot;
+      if (forestRoot) {
+        console.log();
+        console.log(chalk.dim("# try changing to the forest root and removing:"));
+        console.log(chalk.whiteBright(`cd ${forestRoot}`));
+        console.log(chalk.whiteBright(`git forest remove ${branch}`));
+      }
       process.exit(1);
     }
   });

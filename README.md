@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/list.png" width="600" alt="git forest list" />
+  <img src="docs/screenshots/hero.gif" width="600" alt="git forest demo" />
 </p>
 
 ## Quickstart
@@ -139,6 +139,8 @@ git forest remove fix-typo
 # force remove even if dirty
 git forest remove -f big-refactor
 ```
+
+<img src="docs/screenshots/remove.png" width="600" alt="git forest remove" />
 
 ### `git forest clone <org/repo>`
 

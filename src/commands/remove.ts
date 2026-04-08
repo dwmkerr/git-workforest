@@ -31,7 +31,9 @@ export async function removeCommand(
   }
 
   if (match.active) {
-    throw new Error("cannot remove the active tree.");
+    const err = new Error("cannot remove the active tree.");
+    (err as Error & { forestRoot: string }).forestRoot = forestRoot;
+    throw err;
   }
 
   // Check if this is a git worktree (vs a fat tree / standalone clone)

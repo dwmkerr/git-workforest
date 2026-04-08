@@ -46,9 +46,9 @@ describe("remove command", () => {
 
   it("refuses to remove the active tree", async () => {
     const fixDir = path.join(repoRoot, "fix-typo");
-    await expect(
-      removeCommand("fix-typo", fixDir),
-    ).rejects.toThrow("cannot remove the active tree");
+    const err = await removeCommand("fix-typo", fixDir).catch((e) => e);
+    expect(err.message).toMatch("cannot remove the active tree");
+    expect(err.forestRoot).toBe(repoRoot);
   });
 
   it("throws when tree not found", async () => {
