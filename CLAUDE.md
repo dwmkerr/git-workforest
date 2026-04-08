@@ -4,6 +4,26 @@
 
 - **Ideas and future work**: `ideas.md` (project root)
 
+## Specs (OpenSpec)
+
+workforest uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) for spec-driven development. Every behavioural change goes through a change proposal before code is written.
+
+**Workflow:**
+
+1. `opsx:new <change-id>` (or `opsx:ff` to fast-forward) — create a change with proposal, design, tasks, and delta specs
+2. Implement against the tasks — spec first, code second
+3. `opsx:verify` — confirm code matches the change artifacts
+4. `opsx:archive` — merge the delta specs into `openspec/specs/` and move the change to `openspec/changes/archive/`
+
+**Rules:**
+
+- A behavioural change without a spec is incomplete. New commands, flags, error messages, and output formats all go through openspec.
+- Before starting work, read the relevant `openspec/specs/<capability>/spec.md`.
+- Renames and removals of commands must be reflected in the specs in the same change — don't let specs drift from reality.
+- Archive completed changes promptly so `openspec/changes/` doesn't accumulate unmerged deltas.
+- Use `openspec list` to see active changes before starting new work.
+- A local `pre-push` hook runs [specguard](https://github.com/getcorespec/corespec) against the pushed range and blocks pushes with unspec'd behavioural changes. Bypass with `git push --no-verify` is reserved for docs/chore commits.
+
 ## Git conventions
 
 workforest mirrors git's UX wherever possible — commands, flags, and output should feel familiar to git users:

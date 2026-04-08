@@ -334,6 +334,7 @@ program
 
 program
   .command("remove <branch>")
+  .alias("delete")
   .description("remove a tree from the forest (like git worktree remove)")
   .option("-f, --force", "force removal even if tree has uncommitted changes")
   .action(async (branch: string, opts: { force?: boolean }) => {
