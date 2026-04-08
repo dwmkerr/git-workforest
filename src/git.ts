@@ -1,25 +1,42 @@
 import { execFile } from "child_process";
+import chalk from "chalk";
+
+export interface GitOptions {
+  verbose?: boolean;
+}
 
 // promisify(execFile) can leave handles open that prevent node from exiting;
 // this wrapper resolves cleanly via the callback API
-function exec(
+export function gitExec(
   cmd: string,
   args: string[],
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; verbose?: boolean } = {},
 ): Promise<{ stdout: string; stderr: string }> {
+  const { verbose, ...execOpts } = opts;
   return new Promise((resolve, reject) => {
-    execFile(cmd, args, opts, (err, stdout, stderr) => {
+    if (verbose) {
+      console.log(chalk.dim(`$ ${cmd} ${args.join(" ")}`));
+    }
+    execFile(cmd, args, execOpts, (err, stdout, stderr) => {
+      if (verbose) {
+        if (stdout?.trim()) process.stdout.write(chalk.dim(stdout));
+        if (stderr?.trim()) process.stderr.write(chalk.dim(stderr));
+      }
       if (err) reject(err);
       else resolve({ stdout: stdout ?? "", stderr: stderr ?? "" });
     });
   });
 }
 
+// Internal alias for brevity
+const exec = gitExec;
+
 export async function gitClone(
   repoUrl: string,
   targetDir: string,
+  opts: GitOptions = {},
 ): Promise<void> {
-  await exec("git", ["clone", repoUrl, targetDir]);
+  await exec("git", ["clone", repoUrl, targetDir], { verbose: opts.verbose });
 }
 
 export async function getDefaultBranch(repoDir: string): Promise<string> {
@@ -43,16 +60,19 @@ export async function gitWorktreeAdd(
   treePath: string,
   branch: string,
   extraArgs: string[] = [],
+  opts: GitOptions = {},
 ): Promise<void> {
   try {
     // Check out existing branch (local or remote tracking)
     await exec("git", ["worktree", "add", treePath, branch, ...extraArgs], {
       cwd: repoDir,
+      verbose: opts.verbose,
     });
   } catch {
     // Branch doesn't exist — create it
     await exec("git", ["worktree", "add", "-b", branch, treePath, ...extraArgs], {
       cwd: repoDir,
+      verbose: opts.verbose,
     });
   }
 }
@@ -61,18 +81,20 @@ export async function gitFatClone(
   sourceDir: string,
   targetDir: string,
   branch: string,
+  opts: GitOptions = {},
 ): Promise<void> {
   const { stdout } = await exec("git", ["remote", "get-url", "origin"], {
     cwd: sourceDir,
+    verbose: opts.verbose,
   });
   const originUrl = stdout.trim();
-  await exec("git", ["clone", originUrl, targetDir]);
+  await exec("git", ["clone", originUrl, targetDir], { verbose: opts.verbose });
   try {
     // Check out existing branch (local or remote tracking)
-    await exec("git", ["checkout", branch], { cwd: targetDir });
+    await exec("git", ["checkout", branch], { cwd: targetDir, verbose: opts.verbose });
   } catch {
     // Branch doesn't exist — create it
-    await exec("git", ["checkout", "-b", branch], { cwd: targetDir });
+    await exec("git", ["checkout", "-b", branch], { cwd: targetDir, verbose: opts.verbose });
   }
 }
 

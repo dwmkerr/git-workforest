@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
@@ -42,6 +42,17 @@ describe("git", () => {
       const gitDir = path.join(target, ".git");
       const stat = await fs.stat(gitDir);
       expect(stat.isDirectory()).toBe(true);
+    });
+
+    it("logs command and output when verbose is true", async () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
+        logs.push(args.map(String).join(" "));
+      });
+      const target = path.join(tmpDir, "cloned-verbose");
+      await gitClone(bareRepo, target, { verbose: true });
+      spy.mockRestore();
+      expect(logs.some((l) => l.includes("git clone"))).toBe(true);
     });
   });
 

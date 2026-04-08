@@ -8,6 +8,7 @@ const ConfigSchema = z.object({
   reposDir: z.string().default("~/repos/[provider]/[org]/[repo]"),
   treeDir: z.string().default("[branch]"),
   fatTrees: z.boolean().default(false),
+  verbose: z.boolean().default(false),
 });
 
 export type WorkforestConfig = z.infer<typeof ConfigSchema>;
@@ -16,6 +17,7 @@ export const DEFAULT_CONFIG: WorkforestConfig = {
   reposDir: "~/repos/[provider]/[org]/[repo]",
   treeDir: "[branch]",
   fatTrees: false,
+  verbose: false,
 };
 
 export async function loadConfig(

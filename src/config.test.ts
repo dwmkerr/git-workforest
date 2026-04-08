@@ -10,6 +10,7 @@ describe("config", () => {
       expect(DEFAULT_CONFIG.reposDir).toBe("~/repos/[provider]/[org]/[repo]");
       expect(DEFAULT_CONFIG.treeDir).toBe("[branch]");
       expect(DEFAULT_CONFIG.fatTrees).toBe(false);
+      expect(DEFAULT_CONFIG.verbose).toBe(false);
     });
   });
 
@@ -28,6 +29,18 @@ describe("config", () => {
       expect(config.fatTrees).toBe(true);
       expect(config.reposDir).toBe("~/repos/[provider]/[org]/[repo]");
       expect(config.treeDir).toBe("[branch]");
+      expect(config.verbose).toBe(false);
+
+      await fs.rm(tmpDir, { recursive: true });
+    });
+
+    it("enables verbose mode from config", async () => {
+      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-test-"));
+      const tmpConfig = path.join(tmpDir, ".workforest.yaml");
+      await fs.writeFile(tmpConfig, "verbose: true\n");
+
+      const config = await loadConfig(tmpConfig);
+      expect(config.verbose).toBe(true);
 
       await fs.rm(tmpDir, { recursive: true });
     });

@@ -1,21 +1,9 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { execFile } from "child_process";
+import { gitExec } from "../git.js";
+import type { GitOptions } from "../git.js";
 import { findForestRoot } from "../paths.js";
 import { statusTrees } from "./status.js";
-
-function exec(
-  cmd: string,
-  args: string[],
-  opts: { cwd?: string } = {},
-): Promise<{ stdout: string; stderr: string }> {
-  return new Promise((resolve, reject) => {
-    execFile(cmd, args, opts, (err, stdout, stderr) => {
-      if (err) reject(err);
-      else resolve({ stdout: stdout ?? "", stderr: stderr ?? "" });
-    });
-  });
-}
 
 export interface RemoveResult {
   treePath: string;
@@ -26,6 +14,8 @@ export async function removeCommand(
   branch: string,
   cwd: string,
   force?: boolean,
+  extraArgs: string[] = [],
+  opts: GitOptions = {},
 ): Promise<RemoveResult> {
   const forestRoot = await findForestRoot(cwd);
   if (!forestRoot) {
@@ -52,10 +42,10 @@ export async function removeCommand(
   if (isWorktree) {
     // Use git worktree remove — it checks for uncommitted changes
     const gitRoot = await getWorktreeGitRoot(match.path);
-    const args = ["worktree", "remove", match.path];
+    const args = ["worktree", "remove", match.path, ...extraArgs];
     if (force) args.splice(2, 0, "--force");
     try {
-      await exec("git", args, { cwd: gitRoot });
+      await gitExec("git", args, { cwd: gitRoot, verbose: opts.verbose });
     } catch (err: unknown) {
       const msg = err instanceof Error ? (err as { stderr?: string }).stderr || err.message : String(err);
       if (msg.includes("contains modified or untracked files") || msg.includes("is dirty")) {
@@ -66,7 +56,7 @@ export async function removeCommand(
   } else {
     // Fat tree — check for uncommitted changes unless forced
     if (!force) {
-      const { stdout } = await exec("git", ["status", "--porcelain"], { cwd: match.path });
+      const { stdout } = await gitExec("git", ["status", "--porcelain"], { cwd: match.path, verbose: opts.verbose });
       if (stdout.trim()) {
         throw new Error(`tree '${branch}' has uncommitted changes. use -f to force.`);
       }
@@ -91,13 +81,13 @@ export async function removeCommand(
 
 async function checkIsWorktree(dir: string): Promise<boolean> {
   try {
-    const { stdout } = await exec(
+    const { stdout } = await gitExec(
       "git",
       ["rev-parse", "--git-common-dir"],
       { cwd: dir },
     );
     const commonDir = stdout.trim();
-    const { stdout: gitDir } = await exec(
+    const { stdout: gitDir } = await gitExec(
       "git",
       ["rev-parse", "--git-dir"],
       { cwd: dir },
@@ -110,7 +100,7 @@ async function checkIsWorktree(dir: string): Promise<boolean> {
 }
 
 async function getWorktreeGitRoot(dir: string): Promise<string> {
-  const { stdout } = await exec(
+  const { stdout } = await gitExec(
     "git",
     ["rev-parse", "--git-common-dir"],
     { cwd: dir },
