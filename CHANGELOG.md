@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/dwmkerr/git-workforest/compare/v0.2.0...v0.3.0) (2026-04-08)
+
+
+### Features
+
+* add --verbose flag and -- passthrough for git params ([#43](https://github.com/dwmkerr/git-workforest/issues/43)) ([7439931](https://github.com/dwmkerr/git-workforest/commit/7439931e804642bdc13bcd6d17d3cdf2ea0b991e))
+* improve remove error hint, add hero gif and remove screenshot ([#44](https://github.com/dwmkerr/git-workforest/issues/44)) ([b7ad11c](https://github.com/dwmkerr/git-workforest/commit/b7ad11cd7541d90815384e9d1645c68a88702bfd))
+
+
+### Bug Fixes
+
+* use scoped package name @dwmkerr/git-workforest for npm publish ([#41](https://github.com/dwmkerr/git-workforest/issues/41)) ([a84d77a](https://github.com/dwmkerr/git-workforest/commit/a84d77acbe1208d9cab6e49cb5bded546630da6c))
+
 ## [0.2.0](https://github.com/dwmkerr/git-workforest/compare/v0.1.0...v0.2.0) (2026-04-03)
 
 
