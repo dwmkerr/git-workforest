@@ -27,7 +27,7 @@ describe("status command", () => {
       `cd "${path.join(repoRoot, "main")}" && git worktree add -b fix-typo "${path.join(repoRoot, "fix-typo")}" HEAD`,
       quiet,
     );
-    await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), "");
+    await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), `remote: ${bareRepo}\n`);
   });
 
   afterEach(async () => {

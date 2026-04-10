@@ -81,19 +81,20 @@ export async function gitFatClone(
   sourceDir: string,
   targetDir: string,
   branch: string,
-  opts: GitOptions = {},
+  opts: GitOptions & { remoteUrl?: string } = {},
 ): Promise<void> {
-  const { stdout } = await exec("git", ["remote", "get-url", "origin"], {
-    cwd: sourceDir,
-    verbose: opts.verbose,
-  });
-  const originUrl = stdout.trim();
+  let originUrl = opts.remoteUrl;
+  if (!originUrl) {
+    const { stdout } = await exec("git", ["remote", "get-url", "origin"], {
+      cwd: sourceDir,
+      verbose: opts.verbose,
+    });
+    originUrl = stdout.trim();
+  }
   await exec("git", ["clone", originUrl, targetDir], { verbose: opts.verbose });
   try {
-    // Check out existing branch (local or remote tracking)
     await exec("git", ["checkout", branch], { cwd: targetDir, verbose: opts.verbose });
   } catch {
-    // Branch doesn't exist — create it
     await exec("git", ["checkout", "-b", branch], { cwd: targetDir, verbose: opts.verbose });
   }
 }
@@ -128,6 +129,23 @@ export async function listLocalBranches(repoDir: string): Promise<string[]> {
     { cwd: repoDir },
   );
   return stdout.trim().split("\n").filter(Boolean);
+}
+
+export function normaliseRemoteUrl(url: string): string {
+  return url
+    .replace(/\.git$/, "")
+    .replace(/^git@([^:]+):/, "https://$1/")
+    .replace(/^ssh:\/\/git@([^/]+)\//, "https://$1/")
+    .toLowerCase();
+}
+
+export function remoteUrlsMatch(a: string, b: string): boolean {
+  return normaliseRemoteUrl(a) === normaliseRemoteUrl(b);
+}
+
+export function repoNameFromRemote(url: string): string | null {
+  const match = url.match(/[/:]([^/]+\/[^/]+?)(?:\.git)?$/);
+  return match ? match[1] : null;
 }
 
 export async function getRepoRoot(dir: string): Promise<string> {

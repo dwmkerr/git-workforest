@@ -15,7 +15,6 @@ import readline from "readline/promises";
 import chalk from "chalk";
 import path from "path";
 import { statusTrees, formatTreeLine } from "./commands/status.js";
-import { getRepoName } from "./git.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
@@ -222,16 +221,12 @@ program
       const context = await detectContext(process.cwd());
 
       if (context === "forest") {
-        const { forestRoot, trees } = await statusTrees(process.cwd());
+        const { forestRoot, repoName, trees } = await statusTrees(process.cwd());
         if (trees.length === 0) {
           console.log("forest detected, no trees found.");
           return;
         }
         const activeTree = trees.find((t) => t.active);
-        const repoName = await getRepoName(
-          trees[0].path,
-          path.basename(forestRoot),
-        );
         if (activeTree) {
           console.log(`already a forest. on branch ${chalk.green(activeTree.branch)} in ${chalk.whiteBright(repoName)}`);
         } else {
@@ -287,14 +282,13 @@ program
 
 async function runStatus(): Promise<void> {
   try {
-    const { forestRoot, trees } = await statusTrees(process.cwd());
+    const { forestRoot, repoName, trees } = await statusTrees(process.cwd());
     if (trees.length === 0) {
       console.log("no trees found.");
       return;
     }
 
     const activeTree = trees.find((t) => t.active);
-    const repoName = await getRepoName(trees[0].path, path.basename(forestRoot));
     if (activeTree) {
       console.log(`on branch ${chalk.green(activeTree.branch)} in ${chalk.whiteBright(repoName)}`);
     } else {

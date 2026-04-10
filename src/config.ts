@@ -9,6 +9,7 @@ const ConfigSchema = z.object({
   treeDir: z.string().default("[branch]"),
   fatTrees: z.boolean().default(false),
   verbose: z.boolean().default(false),
+  remote: z.string().optional(),
 });
 
 export type WorkforestConfig = z.infer<typeof ConfigSchema>;

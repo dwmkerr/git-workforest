@@ -60,15 +60,27 @@ describe("paths", () => {
   });
 
   describe("findForestRoot", () => {
-    it("finds forest root by walking up to .workforest.yaml", async () => {
+    it("finds forest root by walking up to .workforest.yaml with remote", async () => {
       const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-path-test-"));
       const forestRoot = path.join(tmpDir, "myrepo");
       const treeDir = path.join(forestRoot, "main", "src", "deep");
       await fs.mkdir(treeDir, { recursive: true });
-      await fs.writeFile(path.join(forestRoot, ".workforest.yaml"), "");
+      await fs.writeFile(path.join(forestRoot, ".workforest.yaml"), "remote: git@github.com:test/repo.git\n");
 
       const result = await findForestRoot(treeDir);
-      expect(result).toBe(forestRoot);
+      expect(result).toEqual({ forestRoot, remote: "git@github.com:test/repo.git" });
+
+      await fs.rm(tmpDir, { recursive: true });
+    });
+
+    it("throws for legacy marker without remote", async () => {
+      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-path-test-"));
+      const forestRoot = path.join(tmpDir, "myrepo");
+      const treeDir = path.join(forestRoot, "main");
+      await fs.mkdir(treeDir, { recursive: true });
+      await fs.writeFile(path.join(forestRoot, ".workforest.yaml"), "");
+
+      await expect(findForestRoot(treeDir)).rejects.toThrow("missing the 'remote:' key");
 
       await fs.rm(tmpDir, { recursive: true });
     });

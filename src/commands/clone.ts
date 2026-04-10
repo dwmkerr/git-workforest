@@ -33,7 +33,7 @@ export async function cloneCommand(
 
   await fs.rename(tmpClone, treePath);
 
-  await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), "");
+  await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), `remote: ${repoUrl}\n`);
 
   return { repoRoot, treePath, branch: defaultBranch };
 }

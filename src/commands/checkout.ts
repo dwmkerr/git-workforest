@@ -17,13 +17,14 @@ export async function checkoutCommand(
   extraArgs: string[] = [],
   opts: GitOptions = {},
 ): Promise<CheckoutResult> {
-  const forestRoot = await findForestRoot(cwd);
-  if (!forestRoot) {
+  const result = await findForestRoot(cwd);
+  if (!result) {
     throw new Error(
       "not inside a workforest.\ntry 'git forest clone <org/repo>' or 'git forest migrate'",
     );
   }
 
+  const { forestRoot, remote } = result;
   const { trees } = await statusTrees(cwd);
   const match = trees.find((t) => t.branch === branch || t.name === branch);
   if (match) {
@@ -46,7 +47,7 @@ export async function checkoutCommand(
   const treePath = resolveTreePath(forestRoot, config.treeDir, branch);
 
   if (config.fatTrees) {
-    await gitFatClone(gitRoot, treePath, branch, opts);
+    await gitFatClone(gitRoot, treePath, branch, { ...opts, remoteUrl: remote });
   } else {
     await gitWorktreeAdd(gitRoot, treePath, branch, extraArgs, opts);
   }

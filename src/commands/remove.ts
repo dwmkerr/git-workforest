@@ -17,13 +17,14 @@ export async function removeCommand(
   extraArgs: string[] = [],
   opts: GitOptions = {},
 ): Promise<RemoveResult> {
-  const forestRoot = await findForestRoot(cwd);
-  if (!forestRoot) {
+  const result = await findForestRoot(cwd);
+  if (!result) {
     throw new Error(
       "not inside a workforest.\ntry 'git forest clone <org/repo>' or 'git forest migrate'",
     );
   }
 
+  const { forestRoot } = result;
   const { trees } = await statusTrees(cwd);
   const match = trees.find((t) => t.branch === branch || t.name === branch);
   if (!match) {
