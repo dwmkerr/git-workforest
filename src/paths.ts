@@ -45,7 +45,6 @@ export async function findForestRoot(
   let dir = path.resolve(startDir);
   const root = path.parse(dir).root;
   const home = os.homedir();
-  let legacyMarker: string | null = null;
 
   while (dir !== root) {
     if (dir === home) break;
@@ -61,35 +60,11 @@ export async function findForestRoot(
       if (typeof remote === "string" && remote.length > 0) {
         return { forestRoot: dir, remote };
       }
-      // Legacy marker without remote — remember it for error reporting
-      if (!legacyMarker) legacyMarker = markerPath;
     } catch {
       // No file here — keep walking
     }
 
     dir = path.dirname(dir);
-  }
-
-  // Check for accidental marker at $HOME
-  try {
-    const homeMarker = path.join(home, ".workforest.yaml");
-    const content = await fs.readFile(homeMarker, "utf-8");
-    const parsed = parseYaml(content) ?? {};
-    if (typeof parsed === "object" && parsed !== null && "remote" in parsed) {
-      throw new Error(
-        `refusing to treat $HOME as a forest root. remove the 'remote:' key from ${homeMarker}`,
-      );
-    }
-  } catch (err) {
-    if (err instanceof Error && err.message.startsWith("refusing")) throw err;
-  }
-
-  if (legacyMarker) {
-    throw new Error(
-      `forest marker at ${legacyMarker} is missing the 'remote:' key.\n\n` +
-      `# add the remote url to the forest marker:\n` +
-      `echo 'remote: <git-url>' >> ${legacyMarker}`,
-    );
   }
 
   return null;

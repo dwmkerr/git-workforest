@@ -33,7 +33,7 @@ export interface ForestStatus {
   trees: TreeEntry[];
 }
 
-const SKIP_DIRS = new Set(["node_modules", ".git", ".worktrees", "scratch"]);
+const SKIP_DIRS = new Set(["node_modules", ".git", ".worktrees"]);
 
 async function getOriginUrl(dir: string): Promise<string | null> {
   try {

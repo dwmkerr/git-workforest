@@ -73,14 +73,15 @@ describe("paths", () => {
       await fs.rm(tmpDir, { recursive: true });
     });
 
-    it("throws for legacy marker without remote", async () => {
+    it("ignores marker without remote key", async () => {
       const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wf-path-test-"));
       const forestRoot = path.join(tmpDir, "myrepo");
       const treeDir = path.join(forestRoot, "main");
       await fs.mkdir(treeDir, { recursive: true });
       await fs.writeFile(path.join(forestRoot, ".workforest.yaml"), "");
 
-      await expect(findForestRoot(treeDir)).rejects.toThrow("missing the 'remote:' key");
+      const result = await findForestRoot(treeDir);
+      expect(result).toBeNull();
 
       await fs.rm(tmpDir, { recursive: true });
     });

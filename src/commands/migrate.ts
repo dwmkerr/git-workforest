@@ -12,12 +12,7 @@ export interface MigrateResult {
 export async function detectContext(
   cwd: string,
 ): Promise<"forest" | "repo" | "empty"> {
-  try {
-    if (await findForestRoot(cwd)) return "forest";
-  } catch {
-    // Legacy marker errors — treat as forest needing upgrade
-    return "forest";
-  }
+  if (await findForestRoot(cwd)) return "forest";
   if (await isInsideWorktree(cwd)) return "repo";
   return "empty";
 }
