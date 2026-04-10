@@ -1,6 +1,6 @@
 import path from "path";
 import { promises as fs } from "fs";
-import { getRepoRoot, getLocalBranch, isInsideWorktree } from "../git.js";
+import { getRepoRoot, getLocalBranch, isInsideWorktree, gitExec } from "../git.js";
 import { findForestRoot } from "../paths.js";
 
 export interface MigrateResult {
@@ -56,6 +56,13 @@ export async function migrateToForest(cwd: string): Promise<MigrateResult> {
   const repoRoot = gitRoot;
   const treePath = path.join(repoRoot, branch);
 
+  // Read origin URL before moving files
+  const { stdout } = await gitExec("git", ["remote", "get-url", "origin"], { cwd: gitRoot });
+  const remoteUrl = stdout.trim();
+  if (!remoteUrl) {
+    throw new Error("repo has no 'origin' remote. set one before migrating:\n  git remote add origin <url>");
+  }
+
   // Stage everything into a temp dir first so that mkdir for branch paths
   // containing '/' (e.g. feat/foo) won't collide with existing entries.
   const staging = path.join(repoRoot, `.workforest-migrate-${Date.now()}`);
@@ -81,7 +88,7 @@ export async function migrateToForest(cwd: string): Promise<MigrateResult> {
   }
 
   await fs.rm(staging, { recursive: true });
-  await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), "");
+  await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), `remote: ${remoteUrl}\n`);
 
   return { repoRoot, treePath, branch };
 }

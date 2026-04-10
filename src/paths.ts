@@ -1,6 +1,7 @@
 import os from "os";
 import path from "path";
 import { promises as fs } from "fs";
+import { parse as parseYaml } from "yaml";
 
 export interface RepoTokens {
   provider: string;
@@ -33,19 +34,37 @@ export function resolveTreePath(
   return path.join(repoRoot, treeDir);
 }
 
+export interface ForestRoot {
+  forestRoot: string;
+  remote: string;
+}
+
 export async function findForestRoot(
   startDir: string,
-): Promise<string | null> {
+): Promise<ForestRoot | null> {
   let dir = path.resolve(startDir);
   const root = path.parse(dir).root;
+  const home = os.homedir();
 
   while (dir !== root) {
+    if (dir === home) break;
+
+    const markerPath = path.join(dir, ".workforest.yaml");
     try {
-      await fs.access(path.join(dir, ".workforest.yaml"));
-      return dir;
+      const content = await fs.readFile(markerPath, "utf-8");
+      const parsed = parseYaml(content) ?? {};
+      const remote = typeof parsed === "object" && parsed !== null && "remote" in parsed
+        ? (parsed as Record<string, unknown>).remote
+        : undefined;
+
+      if (typeof remote === "string" && remote.length > 0) {
+        return { forestRoot: dir, remote };
+      }
     } catch {
-      dir = path.dirname(dir);
+      // No file here — keep walking
     }
+
+    dir = path.dirname(dir);
   }
 
   return null;

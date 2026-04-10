@@ -29,7 +29,7 @@ describe("checkout command", () => {
     );
     await fs.mkdir(repoRoot, { recursive: true });
     execSync(`git clone "${bareRepo}" "${mainDir}"`, quiet);
-    await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), "");
+    await fs.writeFile(path.join(repoRoot, ".workforest.yaml"), `remote: ${bareRepo}\n`);
   });
 
   afterEach(async () => {
