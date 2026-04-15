@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0](https://github.com/dwmkerr/git-workforest/compare/v0.3.0...v0.4.0) (2026-04-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* existing forests need `remote: <url>` added to their .workforest.yaml marker file.
+
+### Features
+
+* require remote in forest marker, stop discovery at $HOME ([#46](https://github.com/dwmkerr/git-workforest/issues/46)) ([8de3a63](https://github.com/dwmkerr/git-workforest/commit/8de3a63809f67fd1ae6ca5921e232053ee9a607f))
+
 ## [0.3.0](https://github.com/dwmkerr/git-workforest/compare/v0.2.0...v0.3.0) (2026-04-08)
 
 
