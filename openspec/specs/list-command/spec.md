@@ -67,6 +67,10 @@ The CLI SHALL recurse into directories under the forest root to find trees whose
 - **WHEN** scanning the forest root, directories named `node_modules`, `.git`, or `.worktrees` exist
 - **THEN** the CLI SHALL NOT recurse into them
 
+#### Scenario: tree with non-matching remote is excluded
+- **WHEN** a subdirectory is a git repo whose `origin` remote does not match the forest marker's `remote:` URL
+- **THEN** the CLI SHALL exclude it from the tree listing
+
 ### Requirement: list command resolves the default branch
 The CLI SHALL determine the default branch via `git symbolic-ref refs/remotes/origin/HEAD`, falling back to `main` then `master` if the symbolic-ref is unset.
 

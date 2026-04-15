@@ -6,7 +6,7 @@ Context-aware entry point. Detects whether the current directory is inside a for
 
 ## Requirements
 ### Requirement: init command detects context and acts accordingly
-The CLI SHALL provide an `init` command that detects whether the current working directory is inside a forest, inside a non-forest git repo, or neither, and SHALL take the most useful action for that context.
+The CLI SHALL provide an `init` command that detects whether the current working directory is inside a forest, inside a non-forest git repo, or neither, and SHALL take the most useful action for that context. When `init` creates or adopts a forest (via migration), it SHALL write a `.workforest.yaml` marker containing `remote:` set to the repo's `origin` URL.
 
 #### Scenario: already a forest
 - **WHEN** user runs `git forest init` from inside a workforest
@@ -14,14 +14,14 @@ The CLI SHALL provide an `init` command that detects whether the current working
 - **AND** SHALL print the tree listing in the same format as `git forest list`
 
 #### Scenario: forest with no trees
-- **WHEN** user runs `git forest init` from a directory containing `.workforest.yaml` but no trees
+- **WHEN** user runs `git forest init` from a directory containing a forest-level `.workforest.yaml` but no trees
 - **THEN** the CLI SHALL print `forest detected, no trees found.`
 
 #### Scenario: existing repo, not yet a forest
-- **WHEN** user runs `git forest init` from inside a git repo that has no `.workforest.yaml` ancestor
+- **WHEN** user runs `git forest init` from inside a git repo that has no forest-level `.workforest.yaml` ancestor
 - **THEN** the CLI SHALL print a migration preview showing the proposed forest layout with current local branches
 - **AND** SHALL prompt `migrate to forest layout? (y/N)`
-- **AND** on confirmation SHALL run the migration and print `migrated to forest layout.` followed by a `cd` hint
+- **AND** on confirmation SHALL run the migration, write `remote:` into the new marker, and print `migrated to forest layout.` followed by a `cd` hint
 - **AND** on rejection SHALL print `aborted.`
 
 #### Scenario: empty directory, no repo
