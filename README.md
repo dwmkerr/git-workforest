@@ -2,6 +2,8 @@
   <h2 align="center"><code>🌲 git-workforest</code></h2>
   <h3 align="center">Manage git worktrees with a simple, predictable folder structure.<br/>Like <code>git worktree</code>, but handles paths for you.</h3>
   <p align="center">
+    <a href="https://github.com/dwmkerr/git-workforest/actions/workflows/ci.yaml"><img src="https://github.com/dwmkerr/git-workforest/actions/workflows/ci.yaml/badge.svg" alt="ci" /></a>
+    <a href="https://github.com/dwmkerr/git-workforest/actions/workflows/release.yaml"><img src="https://github.com/dwmkerr/git-workforest/actions/workflows/release.yaml/badge.svg" alt="release" /></a>
     <a href="https://www.npmjs.com/package/@dwmkerr/git-workforest"><img src="https://img.shields.io/npm/v/@dwmkerr/git-workforest" alt="npm" /></a>
     <a href="https://codecov.io/gh/dwmkerr/git-workforest"><img src="https://codecov.io/gh/dwmkerr/git-workforest/branch/main/graph/badge.svg" alt="codecov" /></a>
     <a href="https://github.com/dwmkerr/git-workforest/actions/workflows/skill-tests.yaml"><img src="https://github.com/dwmkerr/git-workforest/actions/workflows/skill-tests.yaml/badge.svg" alt="skill tests" /></a>
@@ -187,15 +189,15 @@ verbose: false
 
 <sup>1</sup> **Fat trees**: With worktrees, git prevents checking out a branch that's already checked out elsewhere. If you need to freely switch branches across trees, set `fatTrees: true` to use independent full clones instead.
 
-## Claude Code plugin
+## Claude Code and coding agent setup
 
-This repo is a Claude Code plugin. Install it to teach Claude how to work with workforest-managed repositories:
+If you use [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or other coding agents, install the workforest plugin so the agent understands forest layouts and uses `git forest` commands instead of raw `git worktree`:
 
 ```bash
 claude plugin add dwmkerr/git-workforest
 ```
 
-This adds a `workforest` skill that helps Claude understand forest layouts, use `git forest` commands, and navigate between trees.
+This adds a `workforest` skill that teaches the agent how to list trees, add branches, navigate between trees, and work with the forest directory structure.
 
 ## Developer guide
 
