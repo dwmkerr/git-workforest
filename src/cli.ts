@@ -15,6 +15,7 @@ import readline from "readline/promises";
 import chalk from "chalk";
 import path from "path";
 import { statusTrees, formatTreeLine } from "./commands/status.js";
+import { parseConfirmAnswer } from "./prompt.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
@@ -29,14 +30,38 @@ function printCdHint(dir: string): void {
   console.log(chalk.whiteBright(`cd ${dir}`));
 }
 
-async function confirm(question: string): Promise<boolean> {
+async function printForestSummary(headerPrefix: string): Promise<void> {
+  const { forestRoot, repoName, trees } = await statusTrees(process.cwd());
+  if (trees.length === 0) {
+    console.log(`${headerPrefix}, no trees found.`);
+    return;
+  }
+  const activeTree = trees.find((t) => t.active);
+  if (activeTree) {
+    console.log(`${headerPrefix}. on branch ${chalk.green(activeTree.branch)} in ${chalk.whiteBright(repoName)}`);
+  } else {
+    console.log(`${headerPrefix}. in ${chalk.whiteBright(repoName)}`);
+  }
+  console.log();
+  console.log("trees:");
+  for (const tree of trees) {
+    const prefix = tree.active ? "* " : tree.isDefault ? "  " : "+ ";
+    const branch = tree.active
+      ? chalk.green(tree.branch)
+      : tree.isDefault ? tree.branch : chalk.cyan(tree.branch);
+    const rel = chalk.whiteBright("./" + path.relative(forestRoot, tree.path));
+    console.log(`${prefix}${branch}  ${rel}`);
+  }
+}
+
+async function confirm(question: string, defaultYes: boolean): Promise<boolean> {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
   const answer = await rl.question(question);
   rl.close();
-  return answer.toLowerCase() !== "n";
+  return parseConfirmAnswer(answer, defaultYes);
 }
 
 const program = new Command();
@@ -95,6 +120,7 @@ program
       if (!opts.yes) {
         const ok = await confirm(
           `clone ${org}/${repoName} to ${targetPath}? (Y/n) `,
+          true,
         );
         if (!ok) {
           console.log("aborted.");
@@ -163,7 +189,9 @@ program
       const verbose = program.opts().verbose || config.verbose;
       const context = await detectContext(process.cwd());
 
-      if (context === "repo") {
+      if (context === "forest") {
+        await printForestSummary("already a forest");
+      } else if (context === "repo") {
         const { getLocalBranch, getRepoRoot, listLocalBranches } = await import("./git.js");
         const gitRoot = await getRepoRoot(process.cwd());
         const branch = await getLocalBranch(gitRoot);
@@ -177,7 +205,7 @@ program
         console.log();
 
         console.log("no files will be changed, folder rename only.");
-        const ok = await confirm("migrate to forest layout? (y/N) ");
+        const ok = await confirm("migrate to forest layout? (y/N) ", false);
         if (!ok) {
           console.log("aborted.");
           return;
@@ -221,29 +249,7 @@ program
       const context = await detectContext(process.cwd());
 
       if (context === "forest") {
-        const { forestRoot, repoName, trees } = await statusTrees(process.cwd());
-        if (trees.length === 0) {
-          console.log("forest detected, no trees found.");
-          return;
-        }
-        const activeTree = trees.find((t) => t.active);
-        if (activeTree) {
-          console.log(`already a forest. on branch ${chalk.green(activeTree.branch)} in ${chalk.whiteBright(repoName)}`);
-        } else {
-          console.log(`already a forest. in ${chalk.whiteBright(repoName)}`);
-        }
-        console.log();
-        console.log("trees:");
-        for (const tree of trees) {
-          const prefix = tree.active ? "* " : tree.isDefault ? "  " : "+ ";
-          const branch = tree.active
-            ? chalk.green(tree.branch)
-            : tree.isDefault ? tree.branch : chalk.cyan(tree.branch);
-          const rel = chalk.whiteBright(
-            "./" + path.relative(forestRoot, tree.path),
-          );
-          console.log(`${prefix}${branch}  ${rel}`);
-        }
+        await printForestSummary("already a forest");
       } else if (context === "repo") {
         const { getLocalBranch, getRepoRoot, listLocalBranches } = await import("./git.js");
         const gitRoot = await getRepoRoot(process.cwd());
@@ -259,7 +265,7 @@ program
         console.log();
 
         console.log("no files will be changed, folder rename only.");
-        const ok = await confirm("migrate to forest layout? (y/N) ");
+        const ok = await confirm("migrate to forest layout? (y/N) ", false);
         if (!ok) {
           console.log("aborted.");
           return;
