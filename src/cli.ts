@@ -115,6 +115,7 @@ program
 
 program
   .command("add <branch> [gitArgs...]")
+  .alias("checkout")
   .description("add a tree for a branch (like git worktree add)")
   .allowUnknownOption()
   .action(async (branch: string, gitArgs: string[]) => {
