@@ -42,7 +42,7 @@ When the CLI is run with no command, it SHALL display the standard help output i
 
 #### Scenario: no arguments
 - **WHEN** user runs `workforest` (or `git forest`) with no arguments
-- **THEN** the CLI SHALL print help output listing the commands `clone`, `add`, `migrate`, `init`, `list`, `remove`
+- **THEN** the CLI SHALL print help output listing the commands `clone`, `add|checkout`, `migrate`, `init`, `list`, `remove`
 - **AND** SHALL include examples for `init`, `clone`, `list`, `add`, and `remove`
 
 #### Scenario: help flag still works
