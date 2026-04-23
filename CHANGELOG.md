@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.2.0](https://github.com/dwmkerr/git-workforest/compare/v0.1.0...v0.2.0) (2026-04-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* existing forests need `remote: <url>` added to their .workforest.yaml marker file.
+
+### Features
+
+* add --verbose flag and -- passthrough for git params ([#43](https://github.com/dwmkerr/git-workforest/issues/43)) ([7439931](https://github.com/dwmkerr/git-workforest/commit/7439931e804642bdc13bcd6d17d3cdf2ea0b991e))
+* add checkout as alias for add command ([#55](https://github.com/dwmkerr/git-workforest/issues/55)) ([fb786bc](https://github.com/dwmkerr/git-workforest/commit/fb786bc81c0105503f8ce7ff50f3be63e6184c1e))
+* add Claude Code plugin with workforest skill ([#35](https://github.com/dwmkerr/git-workforest/issues/35)) ([3d0c806](https://github.com/dwmkerr/git-workforest/commit/3d0c806b79e8a897bd856ac9d9cba618086fba1c))
+* add codecov coverage reporting to CI ([#33](https://github.com/dwmkerr/git-workforest/issues/33)) ([9aff125](https://github.com/dwmkerr/git-workforest/commit/9aff125433f0940a07c23c3fe2985603470a982a))
+* align commands with git worktree semantics (list, add, remove) ([#39](https://github.com/dwmkerr/git-workforest/issues/39)) ([e81c3a1](https://github.com/dwmkerr/git-workforest/commit/e81c3a100e9e53200fc314629e9547784b811257))
+* improve remove error hint, add hero gif and remove screenshot ([#44](https://github.com/dwmkerr/git-workforest/issues/44)) ([b7ad11c](https://github.com/dwmkerr/git-workforest/commit/b7ad11cd7541d90815384e9d1645c68a88702bfd))
+* require remote in forest marker, stop discovery at $HOME ([#46](https://github.com/dwmkerr/git-workforest/issues/46)) ([8de3a63](https://github.com/dwmkerr/git-workforest/commit/8de3a63809f67fd1ae6ca5921e232053ee9a607f))
+
+
+### Bug Fixes
+
+* confirm respects default, migrate handles forest context ([#54](https://github.com/dwmkerr/git-workforest/issues/54)) ([34753ca](https://github.com/dwmkerr/git-workforest/commit/34753ca295eb113c34a5e1b1445f2377509f25f3))
+* publish npm package as public (paid plan needed for restricted) ([#53](https://github.com/dwmkerr/git-workforest/issues/53)) ([384de29](https://github.com/dwmkerr/git-workforest/commit/384de294f6d56d246c767a0eacc83967e5781e4b))
+* reset to 0.1.x release line, fix badges, simplify skill tests ([#51](https://github.com/dwmkerr/git-workforest/issues/51)) ([ff45b1e](https://github.com/dwmkerr/git-workforest/commit/ff45b1e6d5ec7c45c9e2e0940a4cf373f24596f8))
+* use scoped package name @dwmkerr/git-workforest for npm publish ([#41](https://github.com/dwmkerr/git-workforest/issues/41)) ([a84d77a](https://github.com/dwmkerr/git-workforest/commit/a84d77acbe1208d9cab6e49cb5bded546630da6c))
+
 ## [0.4.0](https://github.com/dwmkerr/git-workforest/compare/v0.3.0...v0.4.0) (2026-04-15)
 
 
