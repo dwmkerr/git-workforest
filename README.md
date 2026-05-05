@@ -199,6 +199,18 @@ claude plugin add dwmkerr/git-workforest
 
 This adds a `workforest` skill that teaches the agent how to list trees, add branches, navigate between trees, and work with the forest directory structure.
 
+### Resuming a Claude Code session after `migrate`
+
+`migrate` moves your repo into a subdirectory, which changes Claude Code's project key (it's derived from `cwd`). To resume an existing session and keep your file-based memory, symlink the new project key to the old one:
+
+```bash
+d=$(pwd); while [ "$d" != "/" ]; do k=$(echo "$d" | tr '/_' '--'); [ -d "$HOME/.claude/projects/$k" ] && break; d=$(dirname "$d"); done
+ln -sfn "$HOME/.claude/projects/$k" "$HOME/.claude/projects/$(pwd | tr '/_' '--')"
+claude --resume
+```
+
+The walk-up loop handles nested branch names (e.g. `feat/foo/`).
+
 ## Developer guide
 
 Clone and install:
