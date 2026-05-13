@@ -334,7 +334,7 @@ async function runStatus(): Promise<void> {
 
 program
   .command("list")
-  .alias("status")
+  .aliases(["status", "ls"])
   .description("list all trees in the forest (like git worktree list)")
   .action(runStatus);
 
