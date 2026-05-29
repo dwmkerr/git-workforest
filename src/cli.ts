@@ -64,7 +64,7 @@ async function confirm(question: string, defaultYes: boolean): Promise<boolean> 
   return parseConfirmAnswer(answer, defaultYes);
 }
 
-const program = new Command();
+export const program = new Command();
 
 program
   .name("git-workforest")
@@ -93,6 +93,23 @@ examples:
   # remove a tree
   git forest remove fix/typo`,
   );
+
+// Show all aliases (not just the first) in the subcommand summary of `--help`,
+// so e.g. `list|status|ls` appears instead of commander's default `list|status`.
+program.configureHelp({
+  subcommandTerm: (cmd) => {
+    const aliases = cmd.aliases();
+    const namePart = cmd.name() + (aliases.length ? "|" + aliases.join("|") : "");
+    const args = cmd.registeredArguments
+      .map((a) => {
+        const n = a.name() + (a.variadic ? "..." : "");
+        return a.required ? `<${n}>` : `[${n}]`;
+      })
+      .join(" ");
+    const hasOptions = cmd.options.length > 0;
+    return namePart + (hasOptions ? " [options]" : "") + (args ? " " + args : "");
+  },
+});
 
 program
   .command("clone <repo>")
@@ -335,6 +352,7 @@ async function runStatus(): Promise<void> {
 program
   .command("list")
   .alias("status")
+  .alias("ls")
   .description("list all trees in the forest (like git worktree list)")
   .action(runStatus);
 
@@ -364,4 +382,6 @@ program
     }
   });
 
-program.parse();
+if (!process.env.VITEST) {
+  program.parse();
+}
