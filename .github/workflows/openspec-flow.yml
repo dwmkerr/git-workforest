@@ -12,7 +12,7 @@ on:
     types: [created]
 jobs:
   flow:
-    uses: dwmkerr/openspec-flow/.github/workflows/openspec-flow.yml@main
+    uses: dwmkerr/openspec-flow/.github/workflows/openspec-flow.yml@v0.1.6
     secrets:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       OPENSPEC_FLOW_APP_ID: ${{ secrets.OPENSPEC_FLOW_APP_ID || '' }}
