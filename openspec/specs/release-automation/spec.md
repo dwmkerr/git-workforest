@@ -1,3 +1,11 @@
+# release-automation Specification
+
+## Purpose
+
+Automate Workforest version calculation, changelog updates, GitHub releases, and authenticated npm publication from changes merged to the main branch.
+
+## Requirements
+
 ### Requirement: Release Please creates release PRs
 The system SHALL use Release Please to automatically create and maintain a release PR when conventional commits are pushed to `main`.
 
@@ -44,3 +52,19 @@ The release workflow SHALL use an `NPM_TOKEN` repository secret for npm authenti
 #### Scenario: NPM_TOKEN not configured
 - **WHEN** the release workflow runs the publish step and `NPM_TOKEN` is not set
 - **THEN** the publish step SHALL fail
+
+### Requirement: Pre-1.0 releases remain on the 0.1.x line
+The system SHALL increment only the patch component for automated releases while Workforest is configured to remain on the `0.1.x` line, regardless of whether accumulated commits contain features or breaking-change annotations.
+
+#### Scenario: Feature commit is released
+- **WHEN** the current version is `0.1.0` and unreleased commits include a `feat:` commit
+- **THEN** Release Please SHALL propose version `0.1.1`
+
+#### Scenario: Breaking commit is released
+- **WHEN** the current version is `0.1.0` and unreleased commits include a breaking-change annotation
+- **THEN** Release Please SHALL propose version `0.1.1`
+- **AND** SHALL NOT propose version `0.2.0` or `1.0.0`
+
+#### Scenario: Subsequent patch release
+- **WHEN** the current version is `0.1.1` and another releasable commit is accumulated
+- **THEN** Release Please SHALL propose version `0.1.2`
