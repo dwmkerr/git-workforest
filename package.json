@@ -8,6 +8,11 @@
     "git-workforest": "./bin/git-workforest.js",
     "git-forest": "./bin/git-workforest.js"
   },
+  "man": [
+    "./man/workforest.1",
+    "./man/git-forest.1",
+    "./man/git-workforest.1"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -17,6 +22,8 @@
   "files": [
     "dist",
     "bin",
+    "man",
+    "scripts/generate-manpages.mjs",
     "!dist/**/*.test.js",
     "!dist/**/*.map"
   ],
@@ -30,7 +37,10 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "man": "npm run build --silent && node scripts/generate-manpages.mjs",
+    "man:check": "npm run build --silent && node scripts/generate-manpages.mjs --check",
+    "prepack": "npm run man"
   },
   "dependencies": {
     "chalk": "^5.5.0",

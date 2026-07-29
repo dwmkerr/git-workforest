@@ -1,0 +1,77 @@
+.TH WORKFOREST 1 "" "workforest" "User Commands"
+.SH NAME
+workforest, git\-forest, git\-workforest \- Manage git worktrees with a simple, predictable folder structure.
+.SH SYNOPSIS
+.B "workforest [options] [command]"
+.br
+.B "git forest [options] [command]"
+.br
+.B "git workforest [options] [command]"
+.SH DESCRIPTION
+Manage git worktrees with a simple, predictable folder structure.
+.PP
+Workforest manages one clone as a structured forest of Git worktrees, with each branch in its own folder.
+.SH OPTIONS
+.TP
+.B "\-V, \-\-version"
+output the version number
+.TP
+.B "\-v, \-\-verbose"
+show git command output
+.TP
+.B "\-h, \-\-help"
+display help for command
+.SH COMMANDS
+.TP
+.B "clone [options] <repo>"
+Clone a GitHub repo into the structured forest path
+.RS
+.TP
+.B "\-y, \-\-yes"
+Skip confirmation prompt
+.RE
+.TP
+.B "add|checkout <branch> [gitArgs...]"
+add a tree for a branch (like git worktree add)
+.TP
+.B "migrate"
+Migrate an existing repo to forest layout, or clone a new one
+.TP
+.B "init"
+Detect context and set up a forest (migrate, clone, or show status)
+.TP
+.B "list|status|ls"
+list all trees in the forest (like git worktree list)
+.TP
+.B "remove|delete [options] <branch> [gitArgs...]"
+remove a tree from the forest (like git worktree remove)
+.RS
+.TP
+.B "\-f, \-\-force"
+force removal even if tree has uncommitted changes
+.RE
+.TP
+.B "help [command]"
+display help for command
+.SH EXAMPLES
+.nf
+  # set up a forest (detects context automatically)
+  git forest init
+
+  # clone a repo into a structured forest
+  git forest clone dwmkerr/effective\-shell
+
+  # list all trees in the forest
+  git forest list
+
+  # add a new tree for a branch
+  git forest add fix/typo
+
+  # remove a tree
+  git forest remove fix/typo
+.fi
+.SH REPORTING BUGS
+Report issues at https://github.com/dwmkerr/git\-workforest/issues.
+.SH SEE ALSO
+.BR git (1),
+.BR git\-worktree (1)

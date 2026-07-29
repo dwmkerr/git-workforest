@@ -60,6 +60,13 @@ git forest remove fix-typo
 
 Commands mirror `git worktree` semantics — `list`, `add`, `remove` — but workforest handles paths automatically. You can also use the aliases `git-workforest` or `workforest`.
 
+The global install also includes offline reference documentation:
+
+```bash
+man workforest
+git help forest
+```
+
 ## Worktree folder structure
 
 Each branch gets its own folder inside the forest:
