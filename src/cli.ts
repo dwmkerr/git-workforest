@@ -66,18 +66,7 @@ async function confirm(question: string, defaultYes: boolean): Promise<boolean> 
 
 export const program = new Command();
 
-program
-  .name("git-workforest")
-  .description(
-    "Manage git worktrees with a simple, predictable folder structure.",
-  )
-  .version(version)
-  .option("-v, --verbose", "show git command output")
-  .addHelpText(
-    "after",
-    `
-examples:
-
+export const helpExamples = `
   # set up a forest (detects context automatically)
   git forest init
 
@@ -91,7 +80,18 @@ examples:
   git forest add fix/typo
 
   # remove a tree
-  git forest remove fix/typo`,
+  git forest remove fix/typo`;
+
+program
+  .name("git-workforest")
+  .description(
+    "Manage git worktrees with a simple, predictable folder structure.",
+  )
+  .version(version)
+  .option("-v, --verbose", "show git command output")
+  .addHelpText(
+    "after",
+    `\nexamples:\n${helpExamples}`,
   );
 
 // Show all aliases (not just the first) in the subcommand summary of `--help`,
