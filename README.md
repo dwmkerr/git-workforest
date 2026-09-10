@@ -7,6 +7,7 @@
     <a href="https://www.npmjs.com/package/@dwmkerr/git-workforest"><img src="https://img.shields.io/npm/v/@dwmkerr/git-workforest" alt="npm" /></a>
     <a href="https://codecov.io/gh/dwmkerr/git-workforest"><img src="https://codecov.io/gh/dwmkerr/git-workforest/branch/main/graph/badge.svg" alt="codecov" /></a>
     <a href="https://github.com/dwmkerr/git-workforest/actions/workflows/skill-tests.yaml"><img src="https://github.com/dwmkerr/git-workforest/actions/workflows/skill-tests.yaml/badge.svg" alt="skill tests" /></a>
+    <a href="https://github.com/sponsors/dwmkerr/sponsorships?frequency=one-time&amount=5"><img src="https://img.shields.io/badge/thanks-donate-ea4aaa?logo=githubsponsors&logoColor=white" alt="Donate"></a>
   </p>
   <p align="center">
     <a href="#quickstart">Quickstart</a> |

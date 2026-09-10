@@ -65,5 +65,9 @@
     "worktree",
     "workforest",
     "cli"
-  ]
+  ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/dwmkerr"
+  }
 }
